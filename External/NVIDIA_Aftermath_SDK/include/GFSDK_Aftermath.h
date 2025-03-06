@@ -379,7 +379,7 @@ typedef struct GFSDK_Aftermath_PageFaultInformation
 GFSDK_Aftermath_API GFSDK_Aftermath_DX11_Initialize(GFSDK_Aftermath_Version version, uint32_t flags, ID3D11Device* const pDx11Device);
 #endif
 #ifdef __d3d12_h__
-GFSDK_Aftermath_API GFSDK_Aftermath_DX12_Initialize(GFSDK_Aftermath_Version version, uint32_t flags, ID3D12Device* const pDx12Device);
+GFSDK_Aftermath_API GFSDK_Aftermath_DX12_Initialize(GFSDK_Aftermath_Version version, uint32_t flags, ID3D12Device5* const pDx12Device);
 #endif
 
 /////////////////////////////////////////////////////////////////////////
@@ -609,7 +609,7 @@ GFSDK_Aftermath_PFN(GFSDK_AFTERMATH_CALL *PFN_GFSDK_Aftermath_DX11_CreateContext
 #endif
 
 #if defined(__d3d12_h__)
-GFSDK_Aftermath_PFN(GFSDK_AFTERMATH_CALL *PFN_GFSDK_Aftermath_DX12_Initialize)(GFSDK_Aftermath_Version version, uint32_t flags, ID3D12Device* const pDx12Device);
+GFSDK_Aftermath_PFN(GFSDK_AFTERMATH_CALL *PFN_GFSDK_Aftermath_DX12_Initialize)(GFSDK_Aftermath_Version version, uint32_t flags, ID3D12Device5* const pDx12Device);
 GFSDK_Aftermath_PFN(GFSDK_AFTERMATH_CALL *PFN_GFSDK_Aftermath_DX12_CreateContextHandle)(IUnknown* const pDx12CommandList, GFSDK_Aftermath_ContextHandle* pOutContextHandle);
 GFSDK_Aftermath_PFN(GFSDK_AFTERMATH_CALL *PFN_GFSDK_Aftermath_DX12_RegisterResource)(ID3D12Resource* const pResource, GFSDK_Aftermath_ResourceHandle* pOutResourceHandle);
 GFSDK_Aftermath_PFN(GFSDK_AFTERMATH_CALL *PFN_GFSDK_Aftermath_DX12_UnregisterResource)(const GFSDK_Aftermath_ResourceHandle resourceHandle);

@@ -1077,7 +1077,7 @@ struct ALLOCATOR_DESC
 
     Allocator is doing `AddRef`/`Release` on this object.
     */
-    ID3D12Device* pDevice;
+    ID3D12Device5* pDevice;
     
     /** \brief Preferred size of a single `ID3D12Heap` block to be allocated.
     

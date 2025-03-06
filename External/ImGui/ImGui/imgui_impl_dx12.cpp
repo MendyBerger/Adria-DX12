@@ -74,7 +74,7 @@ struct ImGui_ImplDX12_Texture
 struct ImGui_ImplDX12_Data
 {
     ImGui_ImplDX12_InitInfo     InitInfo;
-    ID3D12Device*               pd3dDevice;
+    ID3D12Device5*               pd3dDevice;
     ID3D12RootSignature*        pRootSignature;
     ID3D12PipelineState*        pPipelineState;
     DXGI_FORMAT                 RTVFormat;
@@ -863,7 +863,7 @@ bool ImGui_ImplDX12_Init(ImGui_ImplDX12_InitInfo* init_info)
 #ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
 // Legacy initialization API Obsoleted in 1.91.5
 // font_srv_cpu_desc_handle and font_srv_gpu_desc_handle are handles to a single SRV descriptor to use for the internal font texture, they must be in 'srv_descriptor_heap'
-bool ImGui_ImplDX12_Init(ID3D12Device* device, int num_frames_in_flight, DXGI_FORMAT rtv_format, ID3D12DescriptorHeap* srv_descriptor_heap, D3D12_CPU_DESCRIPTOR_HANDLE font_srv_cpu_desc_handle, D3D12_GPU_DESCRIPTOR_HANDLE font_srv_gpu_desc_handle)
+bool ImGui_ImplDX12_Init(ID3D12Device5* device, int num_frames_in_flight, DXGI_FORMAT rtv_format, ID3D12DescriptorHeap* srv_descriptor_heap, D3D12_CPU_DESCRIPTOR_HANDLE font_srv_cpu_desc_handle, D3D12_GPU_DESCRIPTOR_HANDLE font_srv_gpu_desc_handle)
 {
     ImGui_ImplDX12_InitInfo init_info;
     init_info.Device = device;
@@ -975,7 +975,7 @@ static void ImGui_ImplDX12_CreateWindow(ImGuiViewport* viewport)
     sd1.Scaling = DXGI_SCALING_NONE;
     sd1.Stereo = FALSE;
 
-    IDXGIFactory4* dxgi_factory = nullptr;
+    IDXGIFactory6* dxgi_factory = nullptr;
     res = ::CreateDXGIFactory1(IID_PPV_ARGS(&dxgi_factory));
     IM_ASSERT(res == S_OK);
 

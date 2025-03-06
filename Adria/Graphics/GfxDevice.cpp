@@ -19,6 +19,8 @@
 #include "Core/Window.h"
 #include "Core/ConsoleManager.h"
 #include "Core/CommandLineOptions.h"
+#include "C:\Users\mendy\Desktop\plugin_runtime.h"
+#include "helper.h"
 
 
 extern "C" { __declspec(dllexport) extern const UINT D3D12SDKVersion = D3D12_SDK_VERSION; }
@@ -257,7 +259,7 @@ namespace adria
 		CloseHandle(dred_wait_handle);
 	}
 
-	GfxDevice::GfxDevice(Window* window)
+	GfxDevice::GfxDevice(Window* window, IDXGIFactory6* my_factory, ID3D12Device5* my_device, ID3D12CommandQueue* my_queue)
 		: frame_index(0), shading_rate_info{}
 	{
 		VSync->Set(CommandLineOptions::GetVsync());
@@ -268,7 +270,7 @@ namespace adria
 		HRESULT hr = E_FAIL;
 		Uint32 dxgi_factory_flags = 0;
 		SetupOptions(dxgi_factory_flags);
-		GFX_CHECK_HR(CreateDXGIFactory2(dxgi_factory_flags, IID_PPV_ARGS(dxgi_factory.GetAddressOf())));
+		dxgi_factory.Swap(my_factory);
 
 		Ref<IDXGIAdapter4> adapter;
 		Uint32 adapter_index = 0;
@@ -309,12 +311,12 @@ namespace adria
 			nsight_aftermath = std::make_unique<GfxNsightAftermathGpuCrashTracker>(this);
 		}
 
-		GFX_CHECK_HR(D3D12CreateDevice(adapter.Get(), D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(device.GetAddressOf())));
-		D3D12_FEATURE_DATA_FEATURE_LEVELS caps{};
-		caps.pFeatureLevelsRequested = feature_levels;
-		caps.NumFeatureLevels = ARRAYSIZE(feature_levels);
-		GFX_CHECK_HR(device->CheckFeatureSupport(D3D12_FEATURE_FEATURE_LEVELS, &caps, sizeof(D3D12_FEATURE_DATA_FEATURE_LEVELS)));
-		GFX_CHECK_HR(D3D12CreateDevice(adapter.Get(), caps.MaxSupportedFeatureLevel, IID_PPV_ARGS(device.ReleaseAndGetAddressOf())));
+		device.Swap(my_device);
+		// D3D12_FEATURE_DATA_FEATURE_LEVELS caps{};
+		// caps.pFeatureLevelsRequested = feature_levels;
+		// caps.NumFeatureLevels = ARRAYSIZE(feature_levels);
+		// GFX_CHECK_HR(device->CheckFeatureSupport(D3D12_FEATURE_FEATURE_LEVELS, &caps, sizeof(D3D12_FEATURE_DATA_FEATURE_LEVELS)));
+		// GFX_CHECK_HR(D3D12CreateDevice(adapter.Get(), caps.MaxSupportedFeatureLevel, IID_PPV_ARGS(device.ReleaseAndGetAddressOf())));
 
 		if (!device_capabilities.Initialize(this))
 		{
@@ -333,9 +335,9 @@ namespace adria
 		GFX_CHECK_HR(D3D12MA::CreateAllocator(&allocator_desc, &_allocator));
 		allocator.reset(_allocator);
 
-		graphics_queue.Create(this, GfxCommandListType::Graphics, "Graphics Queue");
-		compute_queue.Create(this, GfxCommandListType::Compute, "Compute Queue");
-		copy_queue.Create(this, GfxCommandListType::Copy, "Copy Queue");
+		graphics_queue.Create(this, GfxCommandListType::Graphics, my_queue, "Graphics Queue");
+		compute_queue.Create(this, GfxCommandListType::Compute, nullptr, "Compute Queue");
+		copy_queue.Create(this, GfxCommandListType::Copy, nullptr, "Copy Queue");
 
 		for (Uint32 i = 0; i < GFX_BACKBUFFER_COUNT; ++i)
 		{
@@ -433,7 +435,7 @@ namespace adria
 		graphics_cmd_list_pool[backbuffer_index]->BeginCmdLists();
 		copy_cmd_list_pool[backbuffer_index]->BeginCmdLists();
 	}
-	void GfxDevice::EndFrame()
+	void GfxDevice::EndFrame(f_paint_frames paint_frames, struct PluginRuntimeRender* pr_render)
 	{
 		if (first_frame) [[unlikely]] first_frame = false;
 		Uint32 backbuffer_index = swapchain->GetBackbufferIndex();
@@ -444,6 +446,9 @@ namespace adria
 		graphics_queue.ExecuteCommandListPool(*graphics_cmd_list_pool[backbuffer_index]);
 		copy_queue.ExecuteCommandListPool(*copy_cmd_list_pool[backbuffer_index]);
 		ProcessReleaseQueue();
+		
+		ID3D12Resource * fb = GetBackbuffer()->GetNative();
+		paint_frames(pr_render, fb);
 
 		Bool present_successful = swapchain->Present(VSync.Get());
 		if (!present_successful && nsight_aftermath && nsight_aftermath->IsInitialized())
@@ -480,7 +485,7 @@ namespace adria
 		ADRIA_LOG(INFO, "Saving capture of %d frame(s) to %s...", num_frames, full_capture_name.c_str());
 	}
 
-	IDXGIFactory4* GfxDevice::GetFactory() const
+	IDXGIFactory6* GfxDevice::GetFactory() const
 	{
 		return dxgi_factory.Get();
 	}

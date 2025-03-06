@@ -16,7 +16,7 @@ namespace adria
 		GfxCommandQueue() = default;
 		~GfxCommandQueue() = default;
 
-		Bool Create(GfxDevice* gfx, GfxCommandListType type, Char const* name = "");
+		Bool Create(GfxDevice* gfx, GfxCommandListType type, ID3D12CommandQueue* queue, Char const* name = "");
 		
 		void ExecuteCommandLists(std::span<GfxCommandList*> cmd_lists);
 		void ExecuteCommandListPool(GfxCommandListPool& cmd_list_pool);

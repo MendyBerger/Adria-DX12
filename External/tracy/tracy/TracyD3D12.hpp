@@ -61,7 +61,7 @@ namespace tracy
 
 		bool m_initialized = false;
 
-		ID3D12Device* m_device = nullptr;
+		ID3D12Device5* m_device = nullptr;
 		ID3D12CommandQueue* m_queue = nullptr;
 		uint8_t m_context;
 		Microsoft::WRL::ComPtr<ID3D12QueryHeap> m_queryHeap;
@@ -80,7 +80,7 @@ namespace tracy
 		int64_t m_qpcToNs = int64_t{ 1000000000 / GetFrequencyQpc() };
 
 	public:
-		D3D12QueueCtx(ID3D12Device* device, ID3D12CommandQueue* queue)
+		D3D12QueueCtx(ID3D12Device5* device, ID3D12CommandQueue* queue)
 			: m_device(device)
 			, m_queue(queue)
 			, m_context(GetGpuCtxCounter().fetch_add(1, std::memory_order_relaxed))
@@ -447,7 +447,7 @@ namespace tracy
 		}
 	};
 
-	static inline D3D12QueueCtx* CreateD3D12Context(ID3D12Device* device, ID3D12CommandQueue* queue)
+	static inline D3D12QueueCtx* CreateD3D12Context(ID3D12Device5* device, ID3D12CommandQueue* queue)
 	{
 		auto* ctx = static_cast<D3D12QueueCtx*>(tracy_malloc(sizeof(D3D12QueueCtx)));
 		new (ctx) D3D12QueueCtx{ device, queue };

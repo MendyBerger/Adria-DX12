@@ -6551,7 +6551,7 @@ public:
     AllocatorPimpl(const ALLOCATION_CALLBACKS& allocationCallbacks, const ALLOCATOR_DESC& desc);
     ~AllocatorPimpl();
 
-    ID3D12Device* GetDevice() const { return m_Device; }
+    ID3D12Device5* GetDevice() const { return m_Device; }
 #ifdef __ID3D12Device1_INTERFACE_DEFINED__
     ID3D12Device1* GetDevice1() const { return m_Device1; }
 #endif
@@ -6650,7 +6650,7 @@ private:
     const bool m_AlwaysCommitted;
     const bool m_MsaaAlwaysCommitted;
     bool m_DefaultPoolsNotZeroed = false;
-    ID3D12Device* m_Device; // AddRef
+    ID3D12Device5* m_Device; // AddRef
 #ifdef __ID3D12Device1_INTERFACE_DEFINED__
     ID3D12Device1* m_Device1 = NULL; // AddRef, optional
 #endif
@@ -8203,7 +8203,7 @@ template<typename D3D12_RESOURCE_DESC_T>
 D3D12_RESOURCE_ALLOCATION_INFO AllocatorPimpl::GetResourceAllocationInfo(D3D12_RESOURCE_DESC_T& inOutResourceDesc) const
 {
     /* Optional optimization: Microsoft documentation says:
-    https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12device-getresourceallocationinfo
+    https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-ID3D12Device-getresourceallocationinfo
 
     Your application can forgo using GetResourceAllocationInfo for buffer resources
     (D3D12_RESOURCE_DIMENSION_BUFFER). Buffers have the same size on all adapters,

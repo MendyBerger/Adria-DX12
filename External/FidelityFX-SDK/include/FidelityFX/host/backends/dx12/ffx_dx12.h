@@ -58,7 +58,7 @@ FFX_API size_t ffxGetScratchMemorySizeDX12(size_t maxContexts);
 /// An abstract FidelityFX device.
 ///
 /// @ingroup DX12Backend
-FFX_API FfxDevice ffxGetDeviceDX12(ID3D12Device* device);
+FFX_API FfxDevice ffxGetDeviceDX12(ID3D12Device5* device);
 
 /// Populate an interface with pointers for the DX12 backend.
 ///

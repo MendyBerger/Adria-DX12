@@ -26,7 +26,7 @@ public: // Function declaration
     CD3DX12FeatureSupport() noexcept;
 
     // Initialize data from the given device
-    HRESULT Init(ID3D12Device* pDevice);
+    HRESULT Init(ID3D12Device5* pDevice);
 
     // Retreives the status of the object. If an error occurred in the initialization process, the function returns the error code.
     HRESULT GetStatus() const noexcept { return m_hStatus; }
@@ -259,7 +259,7 @@ private: // Private structs and helpers declaration
 
 private: // Member data
     // Pointer to the underlying device
-    ID3D12Device* m_pDevice;
+    ID3D12Device5* m_pDevice;
 
     // Stores the error code from initialization
     HRESULT m_hStatus;
@@ -421,7 +421,7 @@ inline CD3DX12FeatureSupport::CD3DX12FeatureSupport() noexcept
 #endif
 {}
 
-inline HRESULT CD3DX12FeatureSupport::Init(ID3D12Device* pDevice)
+inline HRESULT CD3DX12FeatureSupport::Init(ID3D12Device5* pDevice)
 {
     if (!pDevice)
     {

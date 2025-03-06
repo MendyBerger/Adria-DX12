@@ -16,15 +16,17 @@
 #include "Utilities/Timer.h"
 #include "Utilities/StringUtil.h"
 #include "Editor/EditorEvents.h"
+#include "C:\Users\mendy\Desktop\plugin_runtime.h"
+#include "helper.h"
 
 
 namespace adria
 {
-	Engine::Engine(Window* window, std::string const& scene_file) : window{ window }, viewport_data{}
+	Engine::Engine(Window* window, std::string const& scene_file, struct PluginRuntimeRender*  pr_render, IDXGIFactory6* factory, ID3D12Device5* device, ID3D12CommandQueue* queue) : pr_render{ pr_render }, window{ window }, viewport_data{}
 	{
 		g_ThreadPool.Initialize();
 		GfxShaderCompiler::Initialize();
-		gfx = std::make_unique<GfxDevice>(window);
+		gfx = std::make_unique<GfxDevice>(window, factory, device, queue); //
 		ShaderManager::Initialize();
 		g_TextureManager.Initialize(gfx.get());
 		renderer = std::make_unique<Renderer>(reg, gfx.get(), window->Width(), window->Height());
@@ -66,14 +68,14 @@ namespace adria
 		g_Input.OnWindowEvent(msg_data);
 	}
 
-	void Engine::Run()
+	void Engine::Run(f_paint_frames paint_frames, struct PluginRuntimeRender*  pr_render)
 	{
 		FrameMarkNamed("EngineFrame");
 		static Timer timer;
 		Float const dt = timer.MarkInSeconds();
 		g_Input.Tick();
 		Update(dt);
-		Render();
+		Render(paint_frames, pr_render);
 	}
 
 	void Engine::HandleSceneRequest()
@@ -97,11 +99,11 @@ namespace adria
 		renderer->NewFrame(camera.get());
 		renderer->Update(dt);
 	}
-	void Engine::Render()
+	void Engine::Render(f_paint_frames paint_frames, struct PluginRuntimeRender*  pr_render)
 	{
 		gfx->BeginFrame();
 		renderer->Render();
-		gfx->EndFrame();
+		gfx->EndFrame(paint_frames, pr_render);
 	}
 
 	void Engine::SetViewportData(ViewportData* _viewport_data)

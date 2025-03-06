@@ -124,7 +124,7 @@ namespace adria
 		: gfx(gfx), type(type), cmd_queue(gfx->GetCommandQueue(type)), use_legacy_barriers(!gfx->GetCapabilities().SupportsEnhancedBarriers()), current_rt_table(nullptr)
 	{
 		D3D12_COMMAND_LIST_TYPE cmd_list_type = ToD3D12CommandListType(type);
-		ID3D12Device* device = gfx->GetDevice();
+		ID3D12Device5* device = gfx->GetDevice();
 		HRESULT hr = device->CreateCommandAllocator(cmd_list_type, IID_PPV_ARGS(cmd_allocator.GetAddressOf()));
 		GFX_CHECK_HR(hr);
 

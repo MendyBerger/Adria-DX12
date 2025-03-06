@@ -1170,7 +1170,7 @@ constexpr UINT D3D12CalcSubresource( UINT MipSlice, UINT ArraySlice, UINT PlaneS
 
 //------------------------------------------------------------------------------------------------
 inline UINT8 D3D12GetFormatPlaneCount(
-    _In_ ID3D12Device* pDevice,
+    _In_ ID3D12Device5* pDevice,
     DXGI_FORMAT Format
     ) noexcept
 {
@@ -1273,9 +1273,9 @@ struct CD3DX12_RESOURCE_DESC : public D3D12_RESOURCE_DESC
     { return (Dimension == D3D12_RESOURCE_DIMENSION_TEXTURE3D ? DepthOrArraySize : 1u); }
     inline UINT16 ArraySize() const noexcept
     { return (Dimension != D3D12_RESOURCE_DIMENSION_TEXTURE3D ? DepthOrArraySize : 1u); }
-    inline UINT8 PlaneCount(_In_ ID3D12Device* pDevice) const noexcept
+    inline UINT8 PlaneCount(_In_ ID3D12Device5* pDevice) const noexcept
     { return D3D12GetFormatPlaneCount(pDevice, Format); }
-    inline UINT Subresources(_In_ ID3D12Device* pDevice) const noexcept
+    inline UINT Subresources(_In_ ID3D12Device5* pDevice) const noexcept
     { return static_cast<UINT>(MipLevels) * ArraySize() * PlaneCount(pDevice); }
     inline UINT CalcSubresource(UINT MipSlice, UINT ArraySlice, UINT PlaneSlice) noexcept
     { return D3D12CalcSubresource(MipSlice, ArraySlice, PlaneSlice, MipLevels, ArraySize()); }
@@ -1413,9 +1413,9 @@ struct CD3DX12_RESOURCE_DESC1 : public D3D12_RESOURCE_DESC1
     { return (Dimension == D3D12_RESOURCE_DIMENSION_TEXTURE3D ? DepthOrArraySize : 1u); }
     inline UINT16 ArraySize() const noexcept
     { return (Dimension != D3D12_RESOURCE_DIMENSION_TEXTURE3D ? DepthOrArraySize : 1u); }
-    inline UINT8 PlaneCount(_In_ ID3D12Device* pDevice) const noexcept
+    inline UINT8 PlaneCount(_In_ ID3D12Device5* pDevice) const noexcept
     { return D3D12GetFormatPlaneCount(pDevice, Format); }
-    inline UINT Subresources(_In_ ID3D12Device* pDevice) const noexcept
+    inline UINT Subresources(_In_ ID3D12Device5* pDevice) const noexcept
     { return static_cast<UINT>(MipLevels) * ArraySize() * PlaneCount(pDevice); }
     inline UINT CalcSubresource(UINT MipSlice, UINT ArraySlice, UINT PlaneSlice) noexcept
     { return D3D12CalcSubresource(MipSlice, ArraySlice, PlaneSlice, MipLevels, ArraySize()); }

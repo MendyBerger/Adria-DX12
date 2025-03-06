@@ -6,9 +6,9 @@
 
 namespace adria
 {
-	Bool GfxCommandQueue::Create(GfxDevice* gfx, GfxCommandListType type, Char const* name)
+	Bool GfxCommandQueue::Create(GfxDevice* gfx, GfxCommandListType type,  ID3D12CommandQueue* my_queue, Char const* name)
 	{
-		ID3D12Device* device = gfx->GetDevice();
+		ID3D12Device5* device = gfx->GetDevice();
 		D3D12_COMMAND_QUEUE_DESC queue_desc{};
 		auto GetCmdListType = [](GfxCommandListType type)
 		{
@@ -27,8 +27,13 @@ namespace adria
 		queue_desc.Priority = D3D12_COMMAND_QUEUE_PRIORITY_NORMAL;
 		queue_desc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
 		queue_desc.NodeMask = 0;
-		HRESULT hr = device->CreateCommandQueue(&queue_desc, IID_PPV_ARGS(command_queue.GetAddressOf()));
-		if (FAILED(hr)) return false;
+		// TODO:
+		if (my_queue != nullptr) {
+			command_queue.Swap(my_queue);
+		} else {
+			HRESULT hr = device->CreateCommandQueue(&queue_desc, IID_PPV_ARGS(command_queue.GetAddressOf()));
+			if (FAILED(hr)) return false;
+		}
 		command_queue->SetName(ToWideString(name).c_str());
 		if(type != GfxCommandListType::Copy) command_queue->GetTimestampFrequency(&timestamp_frequency);
 		return true;

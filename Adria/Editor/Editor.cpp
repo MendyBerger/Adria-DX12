@@ -24,6 +24,8 @@
 #include "Utilities/StringUtil.h"
 #include "Utilities/Random.h"
 #include "Math/BoundingVolumeUtil.h"
+#include "C:\Users\mendy\Desktop\plugin_runtime.h"
+#include "helper.h"
 
 using namespace DirectX;
 namespace fs = std::filesystem;
@@ -54,11 +56,11 @@ namespace adria
 
 	Editor::Editor() = default;
 	Editor::~Editor() = default;
-	void Editor::Init(EditorInit&& init)
+	void Editor::Init(EditorInit&& init, struct PluginRuntimeRender*  pt_render, IDXGIFactory6* factory, ID3D12Device5* device, ID3D12CommandQueue* queue)
 	{
 		logger = new EditorLogger();
 		g_Log.Register(logger);
-		engine = std::make_unique<Engine>(init.window, init.scene_file);
+		engine = std::make_unique<Engine>(init.window, init.scene_file, pt_render, factory, device, queue); //
 		gfx = engine->gfx.get();
 		gui = std::make_unique<ImGuiManager>(gfx);
 		engine->RegisterEditorEventCallbacks(editor_events);
@@ -80,13 +82,13 @@ namespace adria
 		engine->OnWindowEvent(msg_data);
 		gui->OnWindowEvent(msg_data);
 	}
-	void Editor::Run()
+	void Editor::Run(f_paint_frames paint_frames, struct PluginRuntimeRender*  pr_render)
 	{
 		HandleInput();
 		if (gui->IsVisible()) engine->SetViewportData(&viewport_data);
 		else engine->SetViewportData(nullptr);
 
-		engine->Run();
+		engine->Run(paint_frames, pr_render);
 
 		if (reload_shaders)
 		{

@@ -122,7 +122,7 @@ XESS_PACK_E()
  * @return X<sup>e</sup>SS return status code.
  */
 XESS_API xess_result_t xessD3D12CreateContext(
-    ID3D12Device* pDevice, xess_context_handle_t* phContext);
+    ID3D12Device5* pDevice, xess_context_handle_t* phContext);
 
 /**
  * @brief Initiates pipeline build process

@@ -72,7 +72,7 @@ namespace adria
 			{
 				using enum GfxCommonViewType;
 
-				ID3D12Device* device = gfx->GetDevice();
+				ID3D12Device5* device = gfx->GetDevice();
 
 				GfxDescriptorAllocatorDesc desc{};
 				desc.type = GfxDescriptorHeapType::CBV_SRV_UAV;

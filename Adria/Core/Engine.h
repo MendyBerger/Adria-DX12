@@ -2,6 +2,8 @@
 #include "Rendering/ViewportData.h"
 #include "Rendering/SceneConfig.h"
 #include "entt/entity/registry.hpp"
+#include "C:\Users\mendy\Desktop\plugin_runtime.h"
+#include "helper.h"
 
 namespace adria
 {
@@ -20,12 +22,12 @@ namespace adria
 		friend class Editor;
 
 	public:
-		Engine(Window* window, std::string const& scene_file);
+		Engine(Window* window, std::string const& scene_file, struct PluginRuntimeRender*  pr_render, IDXGIFactory6* factory, ID3D12Device5* device, ID3D12CommandQueue* queue);
 		ADRIA_NONCOPYABLE_NONMOVABLE(Engine)
 		~Engine();
 
 		void OnWindowEvent(WindowEventData const& msg_data);
-		void Run();
+		void Run(f_paint_frames paint_frames, struct PluginRuntimeRender*  pr_render);
 
 	private:
 		Window* window = nullptr;
@@ -36,6 +38,7 @@ namespace adria
 		std::unique_ptr<SceneLoader> scene_loader;
 		ViewportData viewport_data;
 		std::optional<SceneConfig> scene_request;
+		PluginRuntimeRender*  pr_render = nullptr;
 
 	private:
 		void InitializeScene(SceneConfig const&);
@@ -48,7 +51,7 @@ namespace adria
 		void HandleSceneRequest();
 
 		void Update(Float dt);
-		void Render();
+		void Render(f_paint_frames paint_frames, struct PluginRuntimeRender*  pr_render);
 
 		void SetViewportData(ViewportData*);
 		void RegisterEditorEventCallbacks(EditorEvents&);

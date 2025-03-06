@@ -23,6 +23,8 @@
 #include "GfxRayTracingAS.h"
 #include "GfxShadingRate.h"
 #include "Utilities/Releasable.h"
+#include "C:\Users\mendy\Desktop\plugin_runtime.h"
+#include "helper.h"
 
 namespace adria
 {
@@ -93,7 +95,7 @@ namespace adria
 	{
 		friend class GfxCommandList;
 	public:
-		explicit GfxDevice(Window* window);
+		explicit GfxDevice(Window* window, IDXGIFactory6* my_factory, ID3D12Device5* my_device, ID3D12CommandQueue* my_queue);
 		ADRIA_NONCOPYABLE(GfxDevice)
 		ADRIA_DEFAULT_MOVABLE(GfxDevice)
 		~GfxDevice();
@@ -105,11 +107,11 @@ namespace adria
 		Uint32 GetFrameIndex() const;
 
 		void BeginFrame();
-		void EndFrame();
+		void EndFrame(f_paint_frames paint_frames, struct PluginRuntimeRender*  pr_render);
 		void TakePixCapture(Char const* capture_name, Uint32 num_frames);
 
 		void* GetHwnd() const { return hwnd; }
-		IDXGIFactory4* GetFactory() const;
+		IDXGIFactory6* GetFactory() const;
 		ID3D12Device5* GetDevice() const;
 		ID3D12RootSignature* GetCommonRootSignature() const;
 		D3D12MA::Allocator* GetAllocator() const;

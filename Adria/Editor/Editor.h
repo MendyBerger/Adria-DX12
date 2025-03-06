@@ -6,6 +6,8 @@
 #include "Rendering/ViewportData.h"
 #include "Utilities/Singleton.h"
 #include "entt/entity/fwd.hpp"
+#include "C:\Users\mendy\Desktop\plugin_runtime.h"
+#include "helper.h"
 
 namespace adria
 {
@@ -44,11 +46,11 @@ namespace adria
 		};
 
 	public:
-		void Init(EditorInit&& init);
+		void Init(EditorInit&& init, struct PluginRuntimeRender*  pt_render, IDXGIFactory6* factory, ID3D12Device5* device, ID3D12CommandQueue* queue);
 		void Destroy();
 
 		void OnWindowEvent(WindowEventData const& msg_data);
-		void Run();
+		void Run(f_paint_frames paint_frames, struct PluginRuntimeRender*  pr_render);
 		Bool IsActive() const;
 
 		void AddCommand(GUICommand&& command);

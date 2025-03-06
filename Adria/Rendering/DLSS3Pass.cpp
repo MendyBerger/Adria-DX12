@@ -204,7 +204,7 @@ namespace adria
 	{
 		if (gfx->GetVendor() != GfxVendor::Nvidia) return false;
 
-		ID3D12Device* device = gfx->GetDevice();
+		ID3D12Device5* device = gfx->GetDevice();
 
 		static const Wchar* dll_paths[] = 
 		{ 
