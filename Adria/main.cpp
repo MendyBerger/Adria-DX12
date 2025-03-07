@@ -25,6 +25,7 @@ typedef void(__cdecl* f_get_queue)(struct PluginRuntime* self, struct ID3D12Comm
 typedef void(__cdecl* f_add_wasm_module_bytes)(struct PluginRuntime* self, const uint8_t* module_ptr, uintptr_t module_len, struct WasmModuleId** out);
 typedef void(__cdecl* f_remove_wasm_module)(struct PluginRuntime* self, struct WasmModuleId id);
 typedef void(__cdecl* f_pull_create_surface_request)(const PluginRuntime *self, CreateSurfaceRequest **out);
+typedef void(__cdecl* f_create_surface_response)(const CreateSurfaceRequest self, SurfaceViewport viewport);
 typedef void(__cdecl* f_trigger_event_pointer_up)(const struct PluginRuntime* self, const struct WasmModuleId* id, struct PointerEvent event);
 typedef void(__cdecl* f_trigger_event_pointer_down)(const struct PluginRuntime* self, const struct WasmModuleId* id, struct PointerEvent event);
 typedef void(__cdecl* f_trigger_event_pointer_move)(const struct PluginRuntime* self, const struct WasmModuleId* id, struct PointerEvent event);
@@ -75,12 +76,14 @@ std::string GetLastErrorAsString()
 
 using Microsoft::WRL::ComPtr;
 
-void surface_request_loop(f_pull_create_surface_request pull_create_surface_request, PluginRuntime* runtime) {
+void surface_request_loop(f_pull_create_surface_request pull_create_surface_request, f_create_surface_response create_surface_response, PluginRuntime* runtime) {
     while (true) {
         CreateSurfaceRequest * request = nullptr;
         pull_create_surface_request(runtime, &request);
         if (request != nullptr) {
-            
+            create_surface_response(*request, SurfaceViewport {
+                80, 15, 200, 200
+            });
         }
     }
 }
@@ -113,6 +116,7 @@ int APIENTRY wWinMain(
     f_add_wasm_module_bytes add_wasm_module_bytes = (f_add_wasm_module_bytes)GetProcAddress(hGetProcIDDLL, "add_wasm_module_bytes");
     f_remove_wasm_module remove_wasm_module = (f_remove_wasm_module)GetProcAddress(hGetProcIDDLL, "remove_wasm_module");
     f_pull_create_surface_request pull_create_surface_request = (f_pull_create_surface_request)GetProcAddress(hGetProcIDDLL, "pull_create_surface_request");
+    f_create_surface_response create_surface_response = (f_create_surface_response)GetProcAddress(hGetProcIDDLL, "create_surface_response");
     f_trigger_event_pointer_up trigger_event_pointer_up = (f_trigger_event_pointer_up)GetProcAddress(hGetProcIDDLL, "trigger_event_pointer_up");
     f_trigger_event_pointer_down trigger_event_pointer_down = (f_trigger_event_pointer_down)GetProcAddress(hGetProcIDDLL, "trigger_event_pointer_down");
     f_trigger_event_pointer_move trigger_event_pointer_move = (f_trigger_event_pointer_move)GetProcAddress(hGetProcIDDLL, "trigger_event_pointer_move");
@@ -201,7 +205,7 @@ int APIENTRY wWinMain(
     std::thread guest_thread(run_wasm_module, guests, module_id);
     guest_thread.detach();
 
-    std::thread surface_request_thread(surface_request_loop, pull_create_surface_request, runtime);
+    std::thread surface_request_thread(surface_request_loop, pull_create_surface_request, create_surface_response, runtime);
     surface_request_thread.detach();
 
 
