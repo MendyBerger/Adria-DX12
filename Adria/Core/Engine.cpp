@@ -68,13 +68,13 @@ namespace adria
 		g_Input.OnWindowEvent(msg_data);
 	}
 
-	void Engine::Run(f_paint_frames paint_frames, struct PluginRuntimeRender*  pr_render)
+	void Engine::Run(f_paint_frames paint_frames, struct PluginRuntime*  p_runtime, WasmModuleId* module_id, f_trigger_event_camera_orientation trigger_event_camera_orientation, struct PluginRuntimeRender*  pr_render)
 	{
 		FrameMarkNamed("EngineFrame");
 		static Timer timer;
 		Float const dt = timer.MarkInSeconds();
 		g_Input.Tick();
-		Update(dt);
+		Update(dt, p_runtime, module_id, trigger_event_camera_orientation);
 		Render(paint_frames, pr_render);
 	}
 
@@ -92,10 +92,10 @@ namespace adria
 		}
 	}
 
-	void Engine::Update(Float dt)
+	void Engine::Update(Float dt, struct PluginRuntime*  p_runtime, WasmModuleId* module_id, f_trigger_event_camera_orientation trigger_event_camera_orientation)
 	{
 		HandleSceneRequest();
-		camera->Update(dt);
+		camera->Update(dt, p_runtime, module_id, trigger_event_camera_orientation);
 		renderer->NewFrame(camera.get());
 		renderer->Update(dt);
 	}

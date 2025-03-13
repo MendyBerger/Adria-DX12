@@ -1,5 +1,7 @@
 #pragma once
 #include <utility>
+#include "C:\Users\mendy\Desktop\plugin_runtime.h"
+#include "helper.h"
 
 namespace adria
 {
@@ -43,7 +45,7 @@ namespace adria
 
 		void Zoom(Int32 increment);
 		void OnResize(Uint32 w, Uint32 h);
-		void Update(Float dt);
+		void Update(Float dt, struct PluginRuntime*  p_runtime, WasmModuleId* module_id, f_trigger_event_camera_orientation trigger_event_camera_orientation);
 		void Enable(Bool _enabled) { enabled = _enabled; }
 		Bool IsChanged() const { return changed; }
 	private:

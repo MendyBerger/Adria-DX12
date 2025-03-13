@@ -82,13 +82,13 @@ namespace adria
 		engine->OnWindowEvent(msg_data);
 		gui->OnWindowEvent(msg_data);
 	}
-	void Editor::Run(f_paint_frames paint_frames, struct PluginRuntimeRender*  pr_render)
+	void Editor::Run(f_paint_frames paint_frames, struct PluginRuntime* p_runtime, WasmModuleId* module_id, f_trigger_event_camera_orientation trigger_event_camera_orientation, struct PluginRuntimeRender*  pr_render)
 	{
 		HandleInput();
 		if (gui->IsVisible()) engine->SetViewportData(&viewport_data);
 		else engine->SetViewportData(nullptr);
 
-		engine->Run(paint_frames, pr_render);
+		engine->Run(paint_frames, p_runtime, module_id, trigger_event_camera_orientation, pr_render);
 
 		if (reload_shaders)
 		{

@@ -50,7 +50,7 @@ namespace adria
 		void Destroy();
 
 		void OnWindowEvent(WindowEventData const& msg_data);
-		void Run(f_paint_frames paint_frames, struct PluginRuntimeRender*  pr_render);
+		void Run(f_paint_frames paint_frames, struct PluginRuntime*  p_runtime, WasmModuleId* module_id, f_trigger_event_camera_orientation trigger_event_camera_orientation, struct PluginRuntimeRender*  pr_render);
 		Bool IsActive() const;
 
 		void AddCommand(GUICommand&& command);

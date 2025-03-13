@@ -123,7 +123,7 @@ int APIENTRY wWinMain(
     f_run_wasm_module run_wasm_module = (f_run_wasm_module)GetProcAddress(hGetProcIDDLL, "run_wasm_module");
     f_trigger_event_frame_to_all trigger_event_frame_to_all = (f_trigger_event_frame_to_all)GetProcAddress(hGetProcIDDLL, "trigger_event_frame_to_all");
     f_paint_frames paint_frames = (f_paint_frames)GetProcAddress(hGetProcIDDLL, "paint_frames");
-
+    f_trigger_event_camera_orientation trigger_event_camera_orientation = (f_trigger_event_camera_orientation)GetProcAddress(hGetProcIDDLL, "trigger_event_camera_orientation");
 
     if (!create_runtime) {
         std::cout << "=============== could not locate create_runtime function" << std::endl;
@@ -190,7 +190,8 @@ int APIENTRY wWinMain(
     get_queue(runtime, &queue);
 
 
-    std::ifstream file("C:\\Users\\mendy\\Desktop\\component.wasm", std::ios::binary | std::ios::ate);
+    std::ifstream file("C:\\Users\\mendy\\Desktop\\glb-to-webgpu-component.wasm", std::ios::binary | std::ios::ate);
+    // std::ifstream file("C:\\Users\\mendy\\Desktop\\component.wasm", std::ios::binary | std::ios::ate);
     std::streamsize size = file.tellg();
     file.seekg(0, std::ios::beg);
 
@@ -235,7 +236,7 @@ int APIENTRY wWinMain(
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
         trigger_event_frame_to_all(render);
         std::this_thread::sleep_for(std::chrono::milliseconds(4));
-        g_Editor.Run(paint_frames, render);
+        g_Editor.Run(paint_frames, runtime, module_id, trigger_event_camera_orientation, render);
     }
     g_Editor.Destroy();
     

@@ -27,7 +27,7 @@ namespace adria
 		~Engine();
 
 		void OnWindowEvent(WindowEventData const& msg_data);
-		void Run(f_paint_frames paint_frames, struct PluginRuntimeRender*  pr_render);
+		void Run(f_paint_frames paint_frames, struct PluginRuntime*  p_runtime, WasmModuleId* module_id, f_trigger_event_camera_orientation trigger_event_camera_orientation, struct PluginRuntimeRender*  pr_render);
 
 	private:
 		Window* window = nullptr;
@@ -50,7 +50,7 @@ namespace adria
 		}
 		void HandleSceneRequest();
 
-		void Update(Float dt);
+		void Update(Float dt, struct PluginRuntime*  p_runtime, WasmModuleId* module_id, f_trigger_event_camera_orientation trigger_event_camera_orientation);
 		void Render(f_paint_frames paint_frames, struct PluginRuntimeRender*  pr_render);
 
 		void SetViewportData(ViewportData*);
