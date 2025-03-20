@@ -6,8 +6,7 @@
 #include "Rendering/ViewportData.h"
 #include "Utilities/Singleton.h"
 #include "entt/entity/fwd.hpp"
-#include "C:\Users\mendy\Desktop\plugin_runtime.h"
-#include "helper.h"
+#include "my.h"
 
 namespace adria
 {
@@ -46,11 +45,11 @@ namespace adria
 		};
 
 	public:
-		void Init(EditorInit&& init, struct PluginRuntimeRender*  pt_render, IDXGIFactory6* factory, ID3D12Device5* device, ID3D12CommandQueue* queue);
+		void Init(EditorInit&& init, MyPluginRuntime* p_runtime, MyPluginRuntimeRender*  pt_render);
 		void Destroy();
 
 		void OnWindowEvent(WindowEventData const& msg_data);
-		void Run(f_paint_frames paint_frames, struct PluginRuntime*  p_runtime, WasmModuleId* module_id, f_trigger_event_camera_orientation trigger_event_camera_orientation, struct PluginRuntimeRender*  pr_render);
+		void Run(MyPluginRuntime* p_runtime, MyWasmModuleId* module_id, MyPluginRuntimeRender*  pr_render);
 		Bool IsActive() const;
 
 		void AddCommand(GUICommand&& command);

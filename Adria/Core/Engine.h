@@ -2,8 +2,7 @@
 #include "Rendering/ViewportData.h"
 #include "Rendering/SceneConfig.h"
 #include "entt/entity/registry.hpp"
-#include "C:\Users\mendy\Desktop\plugin_runtime.h"
-#include "helper.h"
+#include "my.h"
 
 namespace adria
 {
@@ -22,12 +21,12 @@ namespace adria
 		friend class Editor;
 
 	public:
-		Engine(Window* window, std::string const& scene_file, struct PluginRuntimeRender*  pr_render, IDXGIFactory6* factory, ID3D12Device5* device, ID3D12CommandQueue* queue);
+		Engine(Window* window, std::string const& scene_file, MyPluginRuntime* p_runtime, MyPluginRuntimeRender* pr_render);
 		ADRIA_NONCOPYABLE_NONMOVABLE(Engine)
 		~Engine();
 
 		void OnWindowEvent(WindowEventData const& msg_data);
-		void Run(f_paint_frames paint_frames, struct PluginRuntime*  p_runtime, WasmModuleId* module_id, f_trigger_event_camera_orientation trigger_event_camera_orientation, struct PluginRuntimeRender*  pr_render);
+		void Run(MyPluginRuntime* p_runtime, MyWasmModuleId* module_id, MyPluginRuntimeRender*  pr_render);
 
 	private:
 		Window* window = nullptr;
@@ -38,7 +37,7 @@ namespace adria
 		std::unique_ptr<SceneLoader> scene_loader;
 		ViewportData viewport_data;
 		std::optional<SceneConfig> scene_request;
-		PluginRuntimeRender*  pr_render = nullptr;
+		MyPluginRuntimeRender*  pr_render = nullptr;
 
 	private:
 		void InitializeScene(SceneConfig const&);
@@ -50,8 +49,8 @@ namespace adria
 		}
 		void HandleSceneRequest();
 
-		void Update(Float dt, struct PluginRuntime*  p_runtime, WasmModuleId* module_id, f_trigger_event_camera_orientation trigger_event_camera_orientation);
-		void Render(f_paint_frames paint_frames, struct PluginRuntimeRender*  pr_render);
+		void Update(Float dt, MyPluginRuntime*  p_runtime, MyWasmModuleId* module_id);
+		void Render(MyPluginRuntimeRender*  pr_render);
 
 		void SetViewportData(ViewportData*);
 		void RegisterEditorEventCallbacks(EditorEvents&);

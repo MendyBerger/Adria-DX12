@@ -16,17 +16,18 @@
 #include "Utilities/Timer.h"
 #include "Utilities/StringUtil.h"
 #include "Editor/EditorEvents.h"
-#include "C:\Users\mendy\Desktop\plugin_runtime.h"
-#include "helper.h"
+#include "my.h"
 
 
 namespace adria
 {
-	Engine::Engine(Window* window, std::string const& scene_file, struct PluginRuntimeRender*  pr_render, IDXGIFactory6* factory, ID3D12Device5* device, ID3D12CommandQueue* queue) : pr_render{ pr_render }, window{ window }, viewport_data{}
+	Engine::Engine(Window* window, std::string const& scene_file, MyPluginRuntime* p_runtime, MyPluginRuntimeRender* pr_render) : pr_render{ pr_render }, window{ window }, viewport_data{}
 	{
 		g_ThreadPool.Initialize();
 		GfxShaderCompiler::Initialize();
-		gfx = std::make_unique<GfxDevice>(window, factory, device, queue); //
+		IDXGIFactory6* factory6 = nullptr;
+		p_runtime->GetFactory()->QueryInterface(IID_PPV_ARGS(&factory6));
+		gfx = std::make_unique<GfxDevice>(window, factory6, p_runtime->GetDevice(), p_runtime->GetQueue());
 		ShaderManager::Initialize();
 		g_TextureManager.Initialize(gfx.get());
 		renderer = std::make_unique<Renderer>(reg, gfx.get(), window->Width(), window->Height());
@@ -68,14 +69,14 @@ namespace adria
 		g_Input.OnWindowEvent(msg_data);
 	}
 
-	void Engine::Run(f_paint_frames paint_frames, struct PluginRuntime*  p_runtime, WasmModuleId* module_id, f_trigger_event_camera_orientation trigger_event_camera_orientation, struct PluginRuntimeRender*  pr_render)
+	void Engine::Run(MyPluginRuntime* p_runtime, MyWasmModuleId* module_id, MyPluginRuntimeRender*  pr_render)
 	{
 		FrameMarkNamed("EngineFrame");
 		static Timer timer;
 		Float const dt = timer.MarkInSeconds();
 		g_Input.Tick();
-		Update(dt, p_runtime, module_id, trigger_event_camera_orientation);
-		Render(paint_frames, pr_render);
+		Update(dt, p_runtime, module_id);
+		Render(pr_render);
 	}
 
 	void Engine::HandleSceneRequest()
@@ -92,18 +93,18 @@ namespace adria
 		}
 	}
 
-	void Engine::Update(Float dt, struct PluginRuntime*  p_runtime, WasmModuleId* module_id, f_trigger_event_camera_orientation trigger_event_camera_orientation)
+	void Engine::Update(Float dt, MyPluginRuntime*  p_runtime, MyWasmModuleId* module_id)
 	{
 		HandleSceneRequest();
-		camera->Update(dt, p_runtime, module_id, trigger_event_camera_orientation);
+		camera->Update(dt, p_runtime, module_id);
 		renderer->NewFrame(camera.get());
 		renderer->Update(dt);
 	}
-	void Engine::Render(f_paint_frames paint_frames, struct PluginRuntimeRender*  pr_render)
+	void Engine::Render(MyPluginRuntimeRender*  pr_render)
 	{
 		gfx->BeginFrame();
 		renderer->Render();
-		gfx->EndFrame(paint_frames, pr_render);
+		gfx->EndFrame(pr_render);
 	}
 
 	void Engine::SetViewportData(ViewportData* _viewport_data)

@@ -19,8 +19,7 @@
 #include "Core/Window.h"
 #include "Core/ConsoleManager.h"
 #include "Core/CommandLineOptions.h"
-#include "C:\Users\mendy\Desktop\plugin_runtime.h"
-#include "helper.h"
+#include "my.h"
 
 
 extern "C" { __declspec(dllexport) extern const UINT D3D12SDKVersion = D3D12_SDK_VERSION; }
@@ -435,7 +434,7 @@ namespace adria
 		graphics_cmd_list_pool[backbuffer_index]->BeginCmdLists();
 		copy_cmd_list_pool[backbuffer_index]->BeginCmdLists();
 	}
-	void GfxDevice::EndFrame(f_paint_frames paint_frames, struct PluginRuntimeRender* pr_render)
+	void GfxDevice::EndFrame(MyPluginRuntimeRender* pr_render)
 	{
 		if (first_frame) [[unlikely]] first_frame = false;
 		Uint32 backbuffer_index = swapchain->GetBackbufferIndex();
@@ -448,7 +447,7 @@ namespace adria
 		ProcessReleaseQueue();
 		
 		ID3D12Resource * fb = GetBackbuffer()->GetNative();
-		paint_frames(pr_render, fb);
+		pr_render->PaintFrames(fb);
 
 		Bool present_successful = swapchain->Present(VSync.Get());
 		if (!present_successful && nsight_aftermath && nsight_aftermath->IsInitialized())

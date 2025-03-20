@@ -235,6 +235,7 @@
     <ClCompile Include="Logging\Logger.cpp" />
     <ClCompile Include="Logging\OutputDebugStringLogger.cpp" />
     <ClCompile Include="Logging\OutputStreamLogger.cpp" />
+    <ClCompile Include="my.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Math\Packing.cpp" />
     <ClCompile Include="precomp.cpp">

@@ -12,26 +12,10 @@
 #include "Editor/Editor.h"
 #include "Utilities/MemoryDebugger.h"
 #include "Utilities/CLIParser.h"
-#include "C:\Users\mendy\Desktop\plugin_runtime.h"
-#include "helper.h"
 #include "d3dx12.h"
+#include "my.h"
 
 using namespace adria;
-
-typedef void(__cdecl* f_create_runtime)(struct CreatedRuntime** out);
-typedef void(__cdecl* f_get_factory)(struct PluginRuntime* self, struct IDXGIFactory4** out);
-typedef void(__cdecl* f_get_device)(struct PluginRuntime* self, struct ID3D12Device5** out);
-typedef void(__cdecl* f_get_queue)(struct PluginRuntime* self, struct ID3D12CommandQueue** out);
-typedef void(__cdecl* f_add_wasm_module_bytes)(struct PluginRuntime* self, const uint8_t* module_ptr, uintptr_t module_len, struct WasmModuleId** out);
-typedef void(__cdecl* f_remove_wasm_module)(struct PluginRuntime* self, struct WasmModuleId id);
-typedef void(__cdecl* f_pull_create_surface_request)(const PluginRuntime *self, CreateSurfaceRequest **out);
-typedef void(__cdecl* f_create_surface_response)(const CreateSurfaceRequest self, SurfaceViewport viewport);
-typedef void(__cdecl* f_trigger_event_pointer_up)(const struct PluginRuntime* self, const struct WasmModuleId* id, struct PointerEvent event);
-typedef void(__cdecl* f_trigger_event_pointer_down)(const struct PluginRuntime* self, const struct WasmModuleId* id, struct PointerEvent event);
-typedef void(__cdecl* f_trigger_event_pointer_move)(const struct PluginRuntime* self, const struct WasmModuleId* id, struct PointerEvent event);
-typedef void(__cdecl* f_run_wasm_module)(const struct PluginRuntimeGuests* self, const struct WasmModuleId* id);
-typedef void(__cdecl* f_trigger_event_frame_to_all)(struct PluginRuntimeRender* self);
-
 
 class dbg_stream_for_cout
     : public std::stringbuf
@@ -76,12 +60,11 @@ std::string GetLastErrorAsString()
 
 using Microsoft::WRL::ComPtr;
 
-void surface_request_loop(f_pull_create_surface_request pull_create_surface_request, f_create_surface_response create_surface_response, PluginRuntime* runtime) {
+void surface_request_loop(MyPluginRuntime* runtime) {
     while (true) {
-        CreateSurfaceRequest * request = nullptr;
-        pull_create_surface_request(runtime, &request);
+        auto request = runtime->PullCreateSurfaceRequest();
         if (request != nullptr) {
-            create_surface_response(*request, SurfaceViewport {
+            request->Respond(MySurfaceViewport {
                 80, 15, 200, 200
             });
         }
@@ -98,97 +81,16 @@ int APIENTRY wWinMain(
     freopen("CONOUT$", "w", stdout);
     freopen("CONOUT$", "w", stderr);
 
-    HINSTANCE hGetProcIDDLL = LoadLibrary(L"C:\\Users\\mendy\\Desktop\\plugin_runtime.dll");
-
-
     std::string s = GetLastErrorAsString();
-    //The specified module could not be found.
-    if (!hGetProcIDDLL) {
-        std::cout << s << std::endl;
-        std::cout << "=============== could not load the dynamic library" << std::endl;
-        return EXIT_FAILURE;
-    }
 
-    f_create_runtime create_runtime = (f_create_runtime)GetProcAddress(hGetProcIDDLL, "create_runtime");
-    f_get_factory get_factory = (f_get_factory)GetProcAddress(hGetProcIDDLL, "get_factory");
-    f_get_device get_device = (f_get_device)GetProcAddress(hGetProcIDDLL, "get_device");
-    f_get_queue get_queue = (f_get_queue)GetProcAddress(hGetProcIDDLL, "get_queue");
-    f_add_wasm_module_bytes add_wasm_module_bytes = (f_add_wasm_module_bytes)GetProcAddress(hGetProcIDDLL, "add_wasm_module_bytes");
-    f_remove_wasm_module remove_wasm_module = (f_remove_wasm_module)GetProcAddress(hGetProcIDDLL, "remove_wasm_module");
-    f_pull_create_surface_request pull_create_surface_request = (f_pull_create_surface_request)GetProcAddress(hGetProcIDDLL, "pull_create_surface_request");
-    f_create_surface_response create_surface_response = (f_create_surface_response)GetProcAddress(hGetProcIDDLL, "create_surface_response");
-    f_trigger_event_pointer_up trigger_event_pointer_up = (f_trigger_event_pointer_up)GetProcAddress(hGetProcIDDLL, "trigger_event_pointer_up");
-    f_trigger_event_pointer_down trigger_event_pointer_down = (f_trigger_event_pointer_down)GetProcAddress(hGetProcIDDLL, "trigger_event_pointer_down");
-    f_trigger_event_pointer_move trigger_event_pointer_move = (f_trigger_event_pointer_move)GetProcAddress(hGetProcIDDLL, "trigger_event_pointer_move");
-    f_run_wasm_module run_wasm_module = (f_run_wasm_module)GetProcAddress(hGetProcIDDLL, "run_wasm_module");
-    f_trigger_event_frame_to_all trigger_event_frame_to_all = (f_trigger_event_frame_to_all)GetProcAddress(hGetProcIDDLL, "trigger_event_frame_to_all");
-    f_paint_frames paint_frames = (f_paint_frames)GetProcAddress(hGetProcIDDLL, "paint_frames");
-    f_trigger_event_camera_orientation trigger_event_camera_orientation = (f_trigger_event_camera_orientation)GetProcAddress(hGetProcIDDLL, "trigger_event_camera_orientation");
+    auto created_runtime = my_create_runtime();
+    auto runtime = created_runtime.runtime;
+    auto guests = created_runtime.guests;
+    auto render = created_runtime.render;    
 
-    if (!create_runtime) {
-        std::cout << "=============== could not locate create_runtime function" << std::endl;
-        return EXIT_FAILURE;
-    }
-    if (!get_factory) {
-        std::cout << "=============== could not locate get_factory function" << std::endl;
-        return EXIT_FAILURE;
-    }
-    if (!get_device) {
-        std::cout << "=============== could not locate get_device function" << std::endl;
-        return EXIT_FAILURE;
-    }
-    if (!get_queue) {
-        std::cout << "=============== could not locate get_queue function" << std::endl;
-        return EXIT_FAILURE;
-    }
-    if (!remove_wasm_module) {
-        std::cout << "=============== could not locate remove_wasm_module function" << std::endl;
-        return EXIT_FAILURE;
-    }
-    if (!pull_create_surface_request) {
-        std::cout << "=============== could not locate pull_create_surface_request function" << std::endl;
-        return EXIT_FAILURE;
-    }
-    if (!trigger_event_pointer_up) {
-        std::cout << "=============== could not locate trigger_event_pointer_up function" << std::endl;
-        return EXIT_FAILURE;
-    }
-    if (!trigger_event_pointer_down) {
-        std::cout << "=============== could not locate trigger_event_pointer_down function" << std::endl;
-        return EXIT_FAILURE;
-    }
-    if (!trigger_event_pointer_move) {
-        std::cout << "=============== could not locate trigger_event_pointer_move function" << std::endl;
-        return EXIT_FAILURE;
-    }
-    if (!run_wasm_module) {
-        std::cout << "=============== could not locate run_wasm_module function" << std::endl;
-        return EXIT_FAILURE;
-    }
-    if (!trigger_event_frame_to_all) {
-        std::cout << "=============== could not locate trigger_event_frame_to_all function" << std::endl;
-        return EXIT_FAILURE;
-    }
-
-
-
-    CreatedRuntime* created_runtime = nullptr;
-    create_runtime(&created_runtime);
-    PluginRuntime* runtime = created_runtime->runtime;
-    PluginRuntimeGuests* guests = created_runtime->guests;
-    PluginRuntimeRender* render = created_runtime->render;
-    IDXGIFactory4* factory = nullptr;
-    get_factory(runtime, &factory);
-    IDXGIAdapter1* adapter = nullptr;
-
-
-    ID3D12Device5* device = nullptr;
-    get_device(runtime, &device);
-
-
-    ID3D12CommandQueue* queue = nullptr;
-    get_queue(runtime, &queue);
-
+    auto factory = runtime.GetFactory();
+    auto device = runtime.GetDevice();
+    auto queue = runtime.GetQueue();
 
     std::ifstream file("C:\\Users\\mendy\\Desktop\\glb-to-webgpu-component.wasm", std::ios::binary | std::ios::ate);
     // std::ifstream file("C:\\Users\\mendy\\Desktop\\component.wasm", std::ios::binary | std::ios::ate);
@@ -199,14 +101,13 @@ int APIENTRY wWinMain(
     if (!file.read(buffer.data(), size)) {
         throw std::exception("hello");
     }
-    WasmModuleId* module_id = nullptr;
     const uint8_t* uint8Ptr = reinterpret_cast<const uint8_t*>(buffer.data());
-    add_wasm_module_bytes(runtime, uint8Ptr, size, &module_id);
+    auto module_id = runtime.AddWasmModuleBytes(uint8Ptr, size);
 
-    std::thread guest_thread(run_wasm_module, guests, module_id);
+    std::thread guest_thread(&MyPluginRuntimeGuests::RunWasmModule, &guests, &module_id);
     guest_thread.detach();
 
-    std::thread surface_request_thread(surface_request_loop, pull_create_surface_request, create_surface_response, runtime);
+    std::thread surface_request_thread(surface_request_loop, &runtime);
     surface_request_thread.detach();
 
 
@@ -229,14 +130,14 @@ int APIENTRY wWinMain(
     EditorInit editor_init{ .window = &window, .scene_file = CommandLineOptions::GetSceneFile() };
     IDXGIFactory6* factory6 = nullptr;
     factory->QueryInterface(IID_PPV_ARGS(&factory6));
-    g_Editor.Init(std::move(editor_init), render, factory6, device, queue);
+    g_Editor.Init(std::move(editor_init), &runtime, &render);
     window.GetWindowEvent().AddLambda([](WindowEventData const& msg_data) { g_Editor.OnWindowEvent(msg_data); });
     while (window.Loop())
     {
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
-        trigger_event_frame_to_all(render);
+        render.TriggerEventFrameToAll();
         std::this_thread::sleep_for(std::chrono::milliseconds(4));
-        g_Editor.Run(paint_frames, runtime, module_id, trigger_event_camera_orientation, render);
+        g_Editor.Run(&runtime, &module_id, &render);
     }
     g_Editor.Destroy();
     

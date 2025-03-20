@@ -24,8 +24,7 @@
 #include "Utilities/StringUtil.h"
 #include "Utilities/Random.h"
 #include "Math/BoundingVolumeUtil.h"
-#include "C:\Users\mendy\Desktop\plugin_runtime.h"
-#include "helper.h"
+#include "my.h"
 
 using namespace DirectX;
 namespace fs = std::filesystem;
@@ -56,11 +55,11 @@ namespace adria
 
 	Editor::Editor() = default;
 	Editor::~Editor() = default;
-	void Editor::Init(EditorInit&& init, struct PluginRuntimeRender*  pt_render, IDXGIFactory6* factory, ID3D12Device5* device, ID3D12CommandQueue* queue)
+	void Editor::Init(EditorInit&& init, MyPluginRuntime* p_runtime, MyPluginRuntimeRender* pt_render)
 	{
 		logger = new EditorLogger();
 		g_Log.Register(logger);
-		engine = std::make_unique<Engine>(init.window, init.scene_file, pt_render, factory, device, queue); //
+		engine = std::make_unique<Engine>(init.window, init.scene_file, p_runtime, pt_render); //
 		gfx = engine->gfx.get();
 		gui = std::make_unique<ImGuiManager>(gfx);
 		engine->RegisterEditorEventCallbacks(editor_events);
@@ -82,13 +81,13 @@ namespace adria
 		engine->OnWindowEvent(msg_data);
 		gui->OnWindowEvent(msg_data);
 	}
-	void Editor::Run(f_paint_frames paint_frames, struct PluginRuntime* p_runtime, WasmModuleId* module_id, f_trigger_event_camera_orientation trigger_event_camera_orientation, struct PluginRuntimeRender*  pr_render)
+	void Editor::Run(MyPluginRuntime*  p_runtime, MyWasmModuleId* module_id, MyPluginRuntimeRender*  pr_render)
 	{
 		HandleInput();
 		if (gui->IsVisible()) engine->SetViewportData(&viewport_data);
 		else engine->SetViewportData(nullptr);
 
-		engine->Run(paint_frames, p_runtime, module_id, trigger_event_camera_orientation, pr_render);
+		engine->Run(p_runtime, module_id, pr_render);
 
 		if (reload_shaders)
 		{

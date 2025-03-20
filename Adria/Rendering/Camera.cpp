@@ -3,8 +3,7 @@
 #include "Core/Input.h"
 #include "Math/Constants.h"
 #include "Math/Halton.h"
-#include "C:\Users\mendy\Desktop\plugin_runtime.h"
-#include "helper.h"
+#include "my.h"
 
 using namespace DirectX;
 
@@ -54,7 +53,7 @@ namespace adria
 		return aspect_ratio;
 	}
 
-	void Camera::Update(Float dt, struct PluginRuntime*  p_runtime, WasmModuleId* module_id, f_trigger_event_camera_orientation trigger_event_camera_orientation)
+	void Camera::Update(Float dt, MyPluginRuntime*  p_runtime, MyWasmModuleId* module_id)
 	{
 		changed = false;
 		if (!enabled || g_Input.GetKey(KeyCode::Space))
@@ -96,19 +95,19 @@ namespace adria
 		SetProjectionMatrix(fov, aspect_ratio, near_plane, far_plane);
 
 		
-		QuaternionFfi orientation_ffi = {};
+		MyQuaternion orientation_ffi = {};
 		orientation_ffi.x = orientation.x;
 		orientation_ffi.y = orientation.y;
 		orientation_ffi.z = orientation.z;
 		orientation_ffi.w = orientation.w;
-		Vec3Ffi position_ffi = {};
+		MyVec3 position_ffi = {};
 		position_ffi.x = position.x;
 		position_ffi.y = position.y;
 		position_ffi.z = position.z;
-		CameraFfi camera = {};
+		MyCamera camera = {};
 		camera.orientation = orientation_ffi;
 		camera.position = position_ffi;
-		trigger_event_camera_orientation(p_runtime, module_id, camera);
+	    p_runtime->TriggerEventCameraOrientation(module_id, camera);
 
 	}
 	void Camera::Zoom(Int32 increment)

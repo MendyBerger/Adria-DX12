@@ -23,8 +23,7 @@
 #include "GfxRayTracingAS.h"
 #include "GfxShadingRate.h"
 #include "Utilities/Releasable.h"
-#include "C:\Users\mendy\Desktop\plugin_runtime.h"
-#include "helper.h"
+#include "my.h"
 
 namespace adria
 {
@@ -107,7 +106,7 @@ namespace adria
 		Uint32 GetFrameIndex() const;
 
 		void BeginFrame();
-		void EndFrame(f_paint_frames paint_frames, struct PluginRuntimeRender*  pr_render);
+		void EndFrame(MyPluginRuntimeRender*  pr_render);
 		void TakePixCapture(Char const* capture_name, Uint32 num_frames);
 
 		void* GetHwnd() const { return hwnd; }
