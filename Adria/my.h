@@ -73,16 +73,12 @@ struct MyVec3 {
 struct MyCamera {
     MyQuaternion orientation;
     MyVec3 position;
+    MyCamera(MyQuaternion orientation, MyVec3 position);
+    MyCamera(const Camera ffiCamera);
     Camera ToFfi() const;
     static MyCamera FromFfi(const Camera ffiCamera);
 };
 
-
-struct MyPresentTransparentTexture {
-  WasmModuleId module_id;
-  ID3D12Resource* texture;
-  SurfaceViewport viewport;
-};
 
 
 
@@ -99,6 +95,13 @@ private:
 public:
     WasmModuleId* inner;
     MyWasmModuleId(WasmModuleId* inner);
+};
+
+
+struct MyPresentTransparentTexture {
+  MyWasmModuleId module_id;
+  ID3D12Resource* texture;
+  SurfaceViewport viewport;
 };
 
 
@@ -163,7 +166,7 @@ class MyPluginRuntimeRender {
 
         void TriggerEventFrameToAll() const;
 
-        PresentTransparentTexture* PullPresentTransparentTextures() const;
+        MyPresentTransparentTexture* PullPresentTransparentTextures() const;
 
         void PaintFrames(ID3D12Resource * back_buffer) const;
 };

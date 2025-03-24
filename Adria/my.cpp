@@ -87,6 +87,15 @@ MyVec3 MyVec3::FromFfi(const Vec3 ffiMyVec3) {
     };
 }
 
+MyCamera::MyCamera(MyQuaternion orientation, MyVec3 position) : orientation(orientation), position(position) {}
+MyCamera::MyCamera(const Camera ffiCamera) {
+    // auto orientation = this->orientation.ToFfi();
+    // auto position = this->position.ToFfi();
+    auto h = MyCamera::FromFfi(ffiCamera);
+    orientation = h.orientation;
+    position = h.position;
+}
+
 Camera MyCamera::ToFfi() const {
     auto orientation = this->orientation.ToFfi();
     auto position = this->position.ToFfi();
@@ -169,11 +178,12 @@ MyCamera* MyPluginRuntime::PullSetCameraRequest() const {
     if (camera == nullptr) {
         return nullptr;
     }
-    auto o = new MyCamera();
-    o->orientation = MyQuaternion::FromFfi(camera->orientation);
-    o->position = MyVec3::FromFfi(camera->position);
-    // auto output = MyCamera::FromFfi(*camera);
-    return o;
+    // MyCamera* o = new MyCamera();
+    // o->orientation = MyQuaternion::FromFfi(camera->orientation);
+    // o->position = MyVec3::FromFfi(camera->position);
+    // // auto output = MyCamera::FromFfi(*camera);
+    // return o;
+    return new MyCamera(*camera);
 }
 
 void MyPluginRuntime::TriggerEventPointerUpToRelevantSurface(MyPointerEvent event) const {
@@ -220,6 +230,20 @@ void MyPluginRuntimeRender::PaintFrames(ID3D12Resource * back_buffer) const {
     ffi_paint_frames(inner, back_buffer);
 }
 
+MyPresentTransparentTexture* MyPluginRuntimeRender::PullPresentTransparentTextures() const {
+    PresentTransparentTexture * request = nullptr;
+    ffi_pull_present_transparent_textures(inner, &request);
+    if (request == nullptr) {
+        return nullptr;
+    }
+
+    return new MyPresentTransparentTexture {
+        MyWasmModuleId(&request->module_id),
+        (ID3D12Resource*)request->texture,
+        request->viewport,
+    };
+}
+
 
 // TODO: take path to .dll
 MyCreatedRuntime my_create_runtime() {
@@ -237,6 +261,7 @@ MyCreatedRuntime my_create_runtime() {
     ffi_remove_wasm_module = (f_remove_wasm_module)GetProcAddress(hGetProcIDDLL, "remove_wasm_module");
     ffi_pull_create_surface_request = (f_pull_create_surface_request)GetProcAddress(hGetProcIDDLL, "pull_create_surface_request");
     ffi_create_surface_response = (f_create_surface_response)GetProcAddress(hGetProcIDDLL, "create_surface_response");
+    ffi_pull_set_camera_request = (f_pull_set_camera_request)GetProcAddress(hGetProcIDDLL, "pull_set_camera_request");
     ffi_trigger_event_pointer_up_to_relevant_surface = (f_trigger_event_pointer_up_to_relevant_surface)GetProcAddress(hGetProcIDDLL, "trigger_event_pointer_up_to_relevant_surface");
     ffi_trigger_event_pointer_up = (f_trigger_event_pointer_up)GetProcAddress(hGetProcIDDLL, "trigger_event_pointer_up");
     ffi_trigger_event_pointer_down_to_relevant_surface = (f_trigger_event_pointer_down_to_relevant_surface)GetProcAddress(hGetProcIDDLL, "trigger_event_pointer_down_to_relevant_surface");
@@ -246,6 +271,7 @@ MyCreatedRuntime my_create_runtime() {
     ffi_run_wasm_module = (f_run_wasm_module)GetProcAddress(hGetProcIDDLL, "run_wasm_module");
     ffi_trigger_event_frame_to_all = (f_trigger_event_frame_to_all)GetProcAddress(hGetProcIDDLL, "trigger_event_frame_to_all");
     ffi_paint_frames = (f_paint_frames)GetProcAddress(hGetProcIDDLL, "paint_frames");
+    ffi_pull_present_transparent_textures = (f_pull_present_transparent_textures)GetProcAddress(hGetProcIDDLL, "pull_present_transparent_textures");
     ffi_trigger_event_camera_orientation = (f_trigger_event_camera_orientation)GetProcAddress(hGetProcIDDLL, "trigger_event_camera_orientation");
 
     if (!ffi_create_runtime) {
@@ -272,6 +298,9 @@ MyCreatedRuntime my_create_runtime() {
     if (!ffi_create_surface_response) {
         throw std::runtime_error("Could not locate create_surface_response function");
     }
+    if (!ffi_pull_set_camera_request) {
+        throw std::runtime_error("Could not locate pull_set_camera_request function");
+    }
     if (!ffi_trigger_event_pointer_down_to_relevant_surface) {
         throw std::runtime_error("Could not locate trigger_event_pointer_down_to_relevant_surface function");
     }
@@ -289,6 +318,9 @@ MyCreatedRuntime my_create_runtime() {
     }
     if (!ffi_run_wasm_module) {
         throw std::runtime_error("Could not locate run_wasm_module function");
+    }
+    if (!ffi_pull_present_transparent_textures) {
+        throw std::runtime_error("Could not locate pull_present_transparent_textures function");
     }
     if (!ffi_trigger_event_frame_to_all) {
         throw std::runtime_error("Could not locate trigger_event_frame_to_all function");
