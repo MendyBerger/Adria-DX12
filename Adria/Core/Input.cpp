@@ -34,6 +34,8 @@ namespace adria
 			POINT mouse_screen_pos;
 			if (GetCursorPos(&mouse_screen_pos))
 			{
+				// TODO: make sure this change is no messing anything else up
+				ScreenToClient(static_cast<HWND>(window->Handle()), &mouse_screen_pos);
 				mouse_position_x = static_cast<Float>(mouse_screen_pos.x);
 				mouse_position_y = static_cast<Float>(mouse_screen_pos.y);
 			}

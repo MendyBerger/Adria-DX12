@@ -15,6 +15,7 @@ f_add_wasm_module_bytes ffi_add_wasm_module_bytes;
 f_remove_wasm_module ffi_remove_wasm_module;
 f_pull_create_surface_request ffi_pull_create_surface_request;
 f_create_surface_response ffi_create_surface_response;
+f_pull_set_camera_request ffi_pull_set_camera_request;
 f_trigger_event_pointer_up_to_relevant_surface ffi_trigger_event_pointer_up_to_relevant_surface;
 f_trigger_event_pointer_up ffi_trigger_event_pointer_up;
 f_trigger_event_pointer_down_to_relevant_surface ffi_trigger_event_pointer_down_to_relevant_surface;
@@ -24,6 +25,7 @@ f_trigger_event_pointer_move ffi_trigger_event_pointer_move;
 f_run_wasm_module ffi_run_wasm_module;
 f_trigger_event_frame_to_all ffi_trigger_event_frame_to_all;
 f_paint_frames ffi_paint_frames;
+f_pull_present_transparent_textures ffi_pull_present_transparent_textures;
 f_trigger_event_camera_orientation ffi_trigger_event_camera_orientation;
 
 
@@ -53,29 +55,50 @@ KeyEvent MyKeyEvent::ToFfi() const {
     };
 }
 
-QuaternionFfi MyQuaternion::ToFfi() const {
-    return QuaternionFfi {
+Quaternion MyQuaternion::ToFfi() const {
+    return Quaternion {
         x,
         y,
         z,
         w,
     };
 }
+MyQuaternion MyQuaternion::FromFfi(const Quaternion ffiQuaternion) {
+    return MyQuaternion {
+        ffiQuaternion.x,
+        ffiQuaternion.y,
+        ffiQuaternion.z,
+        ffiQuaternion.w,
+    };
+}
 
-Vec3Ffi MyVec3::ToFfi() const {
-    return Vec3Ffi {
+Vec3 MyVec3::ToFfi() const {
+    return Vec3 {
         x,
         y,
         z,
     };
 }
+MyVec3 MyVec3::FromFfi(const Vec3 ffiMyVec3) {
+    return MyVec3 {
+        ffiMyVec3.x,
+        ffiMyVec3.y,
+        ffiMyVec3.z,
+    };
+}
 
-CameraFfi MyCamera::ToFfi() const {
+Camera MyCamera::ToFfi() const {
     auto orientation = this->orientation.ToFfi();
     auto position = this->position.ToFfi();
-    return CameraFfi {
+    return Camera {
         orientation,
         position,
+    };
+}
+MyCamera MyCamera::FromFfi(const Camera ffiCamera) {
+    return MyCamera {
+        MyQuaternion::FromFfi(ffiCamera.orientation),
+        MyVec3::FromFfi(ffiCamera.position),
     };
 }
 
@@ -138,6 +161,19 @@ MyCreateSurfaceRequest* MyPluginRuntime::PullCreateSurfaceRequest() const {
         return nullptr;
     }
     return new MyCreateSurfaceRequest(request);
+}
+
+MyCamera* MyPluginRuntime::PullSetCameraRequest() const {
+    Camera * camera = nullptr;
+    ffi_pull_set_camera_request(inner, &camera);
+    if (camera == nullptr) {
+        return nullptr;
+    }
+    auto o = new MyCamera();
+    o->orientation = MyQuaternion::FromFfi(camera->orientation);
+    o->position = MyVec3::FromFfi(camera->position);
+    // auto output = MyCamera::FromFfi(*camera);
+    return o;
 }
 
 void MyPluginRuntime::TriggerEventPointerUpToRelevantSurface(MyPointerEvent event) const {

@@ -61,6 +61,23 @@ namespace adria
 			return;
 		}
 
+		// this should probably not be in camera logic
+		Float x = g_Input.GetMousePositionX();
+		Float y = g_Input.GetMousePositionY();
+		if (g_Input.GetKey(KeyCode::MouseLeft))
+		{
+			if (!mouse_active) {
+				p_runtime->TriggerEventPointerDownToRelevantSurface(MyPointerEvent {x, y});
+			}
+			mouse_active = true;
+			p_runtime->TriggerEventPointerMoveToRelevantSurface(MyPointerEvent {x, y});
+		} else {
+			if (mouse_active) {
+				mouse_active = false;
+				p_runtime->TriggerEventPointerUpToRelevantSurface(MyPointerEvent {x, y});
+			}
+		}
+
 		if (g_Input.GetKey(KeyCode::MouseRight))
 		{
 			Float dx = g_Input.GetMouseDeltaX();

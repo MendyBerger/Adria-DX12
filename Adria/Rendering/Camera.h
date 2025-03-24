@@ -61,6 +61,7 @@ namespace adria
 		Float near_plane, far_plane;
 		Bool  enabled;
 		Bool  changed;
+		Bool  mouse_active;
 
 	private:
 		void SetProjectionMatrix(Float fov, Float aspect, Float zn, Float zf);

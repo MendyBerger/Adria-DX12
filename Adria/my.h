@@ -16,6 +16,7 @@ typedef void(__cdecl* f_add_wasm_module_bytes)(struct PluginRuntime* self, const
 typedef void(__cdecl* f_remove_wasm_module)(struct PluginRuntime* self, struct WasmModuleId id);
 typedef void(__cdecl* f_pull_create_surface_request)(const PluginRuntime *self, CreateSurfaceRequest **out);
 typedef void(__cdecl* f_create_surface_response)(const CreateSurfaceRequest self, SurfaceViewport viewport);
+typedef void(__cdecl* f_pull_set_camera_request)(const PluginRuntime *self, Camera **out);
 typedef void(__cdecl* f_trigger_event_pointer_up_to_relevant_surface)(const struct PluginRuntime* self, struct PointerEvent event);
 typedef void(__cdecl* f_trigger_event_pointer_up)(const struct PluginRuntime* self, const struct WasmModuleId* id, struct PointerEvent event);
 typedef void(__cdecl* f_trigger_event_pointer_down_to_relevant_surface)(const struct PluginRuntime* self, struct PointerEvent event);
@@ -25,7 +26,8 @@ typedef void(__cdecl* f_trigger_event_pointer_move)(const struct PluginRuntime* 
 typedef void(__cdecl* f_run_wasm_module)(const struct PluginRuntimeGuests* self, const struct WasmModuleId* id); //
 typedef void(__cdecl* f_trigger_event_frame_to_all)(struct PluginRuntimeRender* self);
 typedef void(__cdecl* f_paint_frames)(struct PluginRuntimeRender*  self, void* host_back_buffer);
-typedef void(__cdecl* f_trigger_event_camera_orientation)(const PluginRuntime *self, const WasmModuleId *id, CameraFfi camera);
+typedef void(__cdecl* f_pull_present_transparent_textures)(struct PluginRuntimeRender* self, PresentTransparentTexture** out);
+typedef void(__cdecl* f_trigger_event_camera_orientation)(const PluginRuntime *self, const WasmModuleId *id, Camera camera);
 
 
 
@@ -56,23 +58,31 @@ struct MyQuaternion {
     float y;
     float z;
     float w;
-    QuaternionFfi ToFfi() const;
+    Quaternion ToFfi() const;
+    static MyQuaternion FromFfi(const Quaternion ffiQuaternion);
 };
 
 struct MyVec3 {
     float x;
     float y;
     float z;
-    Vec3Ffi ToFfi() const;
+    Vec3 ToFfi() const;
+    static MyVec3 FromFfi(const Vec3 ffiVec3);
 };
 
 struct MyCamera {
     MyQuaternion orientation;
     MyVec3 position;
-    CameraFfi ToFfi() const;
+    Camera ToFfi() const;
+    static MyCamera FromFfi(const Camera ffiCamera);
 };
 
 
+struct MyPresentTransparentTexture {
+  WasmModuleId module_id;
+  ID3D12Resource* texture;
+  SurfaceViewport viewport;
+};
 
 
 
@@ -120,6 +130,8 @@ public:
 
     MyCreateSurfaceRequest* PullCreateSurfaceRequest() const;
 
+    MyCamera* PullSetCameraRequest() const;
+
     void TriggerEventPointerUpToRelevantSurface(MyPointerEvent event) const;
 
     void TriggerEventPointerDownToRelevantSurface(MyPointerEvent event) const;
@@ -150,6 +162,8 @@ class MyPluginRuntimeRender {
         MyPluginRuntimeRender(PluginRuntimeRender* inner);
 
         void TriggerEventFrameToAll() const;
+
+        PresentTransparentTexture* PullPresentTransparentTextures() const;
 
         void PaintFrames(ID3D12Resource * back_buffer) const;
 };
