@@ -4,6 +4,7 @@
 #include "Math/Constants.h"
 #include "Math/Halton.h"
 #include "my.h"
+#include <SimpleMath.h>
 
 using namespace DirectX;
 
@@ -106,6 +107,12 @@ namespace adria
 			position += velocity * dt * speed_factor * 25.0f;
 			changed = true;
 		}
+
+		auto new_cam_pos = p_runtime->PullSetCameraRequest();
+        if (new_cam_pos != nullptr) {
+			orientation = DirectX::SimpleMath::Quaternion(new_cam_pos->orientation.x, new_cam_pos->orientation.y, new_cam_pos->orientation.z, new_cam_pos->orientation.w);
+			position = DirectX::SimpleMath::Vector3(new_cam_pos->position.x, new_cam_pos->position.y, new_cam_pos->position.z);
+        }
 		
 		Matrix view_inverse = Matrix::CreateFromQuaternion(orientation) * Matrix::CreateTranslation(position);
 		view_inverse.Invert(view_matrix);
