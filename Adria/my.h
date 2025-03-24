@@ -75,22 +75,10 @@ struct MyCamera {
     MyVec3 position;
     MyCamera(MyQuaternion orientation, MyVec3 position);
     MyCamera(const Camera ffiCamera);
+    MyCamera() = default;
     Camera ToFfi() const;
     static MyCamera FromFfi(const Camera ffiCamera);
 };
-
-
-struct MyPresentTransparentTexture {
-  WasmModuleId module_id;
-  ID3D12Resource* texture;
-  SurfaceViewport viewport;
-};
-
-
-
-
-
-
 
 
 

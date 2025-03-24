@@ -57,7 +57,7 @@ namespace adria
 
 		void NewFrame(Camera const* camera);
 		void Update(Float dt);
-		void Render();
+		void Render(MyPluginRuntimeRender* pr_render);
 
 		void OnResize(Uint32 w, Uint32 h);
 		void OnRenderResolutionChanged(Uint32 w, Uint32 h);
@@ -175,6 +175,9 @@ namespace adria
 		VolumetricPathType		 volumetric_path = VolumetricPathType::Raymarching;
 		//misc
 		ViewportData			 viewport_data;
+
+		// HUD texture
+		std::unique_ptr<GfxTexture> hud_texture;
 
 	private:
 		void CreateDisplaySizeDependentResources();

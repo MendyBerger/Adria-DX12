@@ -103,7 +103,7 @@ namespace adria
 	void Engine::Render(MyPluginRuntimeRender*  pr_render)
 	{
 		gfx->BeginFrame();
-		renderer->Render();
+		renderer->Render(pr_render);
 		gfx->EndFrame(pr_render);
 	}
 

@@ -103,7 +103,7 @@ namespace adria
 		UpdateFrameConstants(dt);
 		CameraFrustumCulling();
 	}
-	void Renderer::Render()
+	void Renderer::Render(MyPluginRuntimeRender* pr_render)
 	{
 		RenderGraph render_graph(resource_pool);
 		RGBlackboard& rg_blackboard = render_graph.GetBlackboard();
@@ -141,11 +141,32 @@ namespace adria
 		if (!g_Editor.IsActive()) CopyToBackbuffer(render_graph);
 		else g_Editor.AddRenderPass(render_graph);
 
-		CopyToTexturePass copy_pass(gfx, render_width, render_height);
-		copy_pass.AddPass(render_graph, RG_NAME(Backbuffer), RG_NAME(FinalTexture), BlendMode::AdditiveBlend);
+		auto textures = pr_render->PullPresentTransparentTextures();
+		if (textures != nullptr && textures->texture != nullptr)
+		{
+			GfxTextureDesc desc{};
+			desc.width = 200;
+			desc.height = 200;
+			hud_texture = std::make_unique<GfxTexture>(gfx, desc, textures->texture);
+			// update	
+		}
 
-		render_graph.Build();
-		render_graph.Execute();
+		if (hud_texture != nullptr)
+		{
+			render_graph.ImportTexture(RG_NAME(HUD), hud_texture.get());
+
+			CopyToTexturePass copy_pass(gfx, render_width, render_height);
+			copy_pass.AddPass(render_graph, RG_NAME(Backbuffer), RG_NAME(HUD), BlendMode::AdditiveBlend);
+
+			render_graph.Build();
+			render_graph.Execute();
+		}
+		else
+		{
+			render_graph.Build();
+			render_graph.Execute();
+		}
+
 
 		GUI();
 	}
