@@ -2,7 +2,6 @@
 #include <iostream>
 #include <functional>
 #include <string>
-#include "C:\Users\mendy\Desktop\plugin_runtime.h"
 #include "d3dx12.h"
 #include <dxgi1_4.h>
 #include "my.h"
@@ -247,7 +246,8 @@ MyPresentTransparentTexture* MyPluginRuntimeRender::PullPresentTransparentTextur
 
 // TODO: take path to .dll
 MyCreatedRuntime my_create_runtime() {
-    HINSTANCE hGetProcIDDLL = LoadLibrary(L"C:\\Users\\mendy\\Desktop\\plugin_runtime.dll");
+    //HINSTANCE hGetProcIDDLL = LoadLibrary(L"C:\\Users\\mendy\\Desktop\\plugin_runtime.dll");
+	HINSTANCE hGetProcIDDLL = LoadLibrary(L"C:\\Code\\plugin-runtime\\target\\x86_64-pc-windows-msvc\\release\\plugin_runtime.dll");
 
     if (!hGetProcIDDLL) {
         throw std::runtime_error("Could not load the dynamic library");

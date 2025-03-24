@@ -566,6 +566,7 @@
     </ClCompile>
     <ClCompile Include="Graphics\GfxCommandSignature.cpp" />
     <ClCompile Include="Core\CommandLineOptions.cpp" />
+    <ClCompile Include="my.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Utilities\RingBuffer.h">

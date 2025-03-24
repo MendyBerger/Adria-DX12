@@ -92,8 +92,9 @@ int APIENTRY wWinMain(
     auto device = runtime.GetDevice();
     auto queue = runtime.GetQueue();
 
-    std::ifstream file("C:\\Users\\mendy\\Desktop\\glb-to-webgpu-component.wasm", std::ios::binary | std::ios::ate);
-    // std::ifstream file("C:\\Users\\mendy\\Desktop\\component.wasm", std::ios::binary | std::ios::ate);
+    //std::ifstream file("C:\\Users\\mendy\\Desktop\\glb-to-webgpu-component.wasm", std::ios::binary | std::ios::ate);
+    std::ifstream file("C:\\Code\\glb-to-webgpu\\glb-to-webgpu-component.wasm", std::ios::binary | std::ios::ate);
+	//std::ifstream file("C:\\Code\\plugin-runtime\\guest\\target\\component.wasm", std::ios::binary | std::ios::ate);
     std::streamsize size = file.tellg();
     file.seekg(0, std::ios::beg);
 

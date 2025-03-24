@@ -4,7 +4,7 @@
 #include <iostream>
 #include <functional>
 #include <string>
-#include "C:\Users\mendy\Desktop\plugin_runtime.h"
+#include "plugin_runtime.h"
 #include "d3dx12.h"
 #include <dxgi1_4.h>
 
@@ -16,7 +16,6 @@ typedef void(__cdecl* f_add_wasm_module_bytes)(struct PluginRuntime* self, const
 typedef void(__cdecl* f_remove_wasm_module)(struct PluginRuntime* self, struct WasmModuleId id);
 typedef void(__cdecl* f_pull_create_surface_request)(const PluginRuntime *self, CreateSurfaceRequest **out);
 typedef void(__cdecl* f_create_surface_response)(const CreateSurfaceRequest self, SurfaceViewport viewport);
-typedef void(__cdecl* f_pull_set_camera_request)(const PluginRuntime *self, Camera **out);
 typedef void(__cdecl* f_trigger_event_pointer_up_to_relevant_surface)(const struct PluginRuntime* self, struct PointerEvent event);
 typedef void(__cdecl* f_trigger_event_pointer_up)(const struct PluginRuntime* self, const struct WasmModuleId* id, struct PointerEvent event);
 typedef void(__cdecl* f_trigger_event_pointer_down_to_relevant_surface)(const struct PluginRuntime* self, struct PointerEvent event);
@@ -26,7 +25,6 @@ typedef void(__cdecl* f_trigger_event_pointer_move)(const struct PluginRuntime* 
 typedef void(__cdecl* f_run_wasm_module)(const struct PluginRuntimeGuests* self, const struct WasmModuleId* id); //
 typedef void(__cdecl* f_trigger_event_frame_to_all)(struct PluginRuntimeRender* self);
 typedef void(__cdecl* f_paint_frames)(struct PluginRuntimeRender*  self, void* host_back_buffer);
-typedef void(__cdecl* f_pull_present_transparent_textures)(struct PluginRuntimeRender* self, PresentTransparentTexture** out);
 typedef void(__cdecl* f_trigger_event_camera_orientation)(const PluginRuntime *self, const WasmModuleId *id, Camera camera);
 
 
@@ -59,7 +57,6 @@ struct MyQuaternion {
     float z;
     float w;
     Quaternion ToFfi() const;
-    static MyQuaternion FromFfi(const Quaternion ffiQuaternion);
 };
 
 struct MyVec3 {
@@ -67,7 +64,6 @@ struct MyVec3 {
     float y;
     float z;
     Vec3 ToFfi() const;
-    static MyVec3 FromFfi(const Vec3 ffiVec3);
 };
 
 struct MyCamera {
@@ -76,7 +72,6 @@ struct MyCamera {
     MyCamera(MyQuaternion orientation, MyVec3 position);
     MyCamera(const Camera ffiCamera);
     Camera ToFfi() const;
-    static MyCamera FromFfi(const Camera ffiCamera);
 };
 
 
@@ -132,8 +127,6 @@ public:
     MyWasmModuleId AddWasmModuleBytes(const uint8_t *module_ptr, uintptr_t module_len);
 
     MyCreateSurfaceRequest* PullCreateSurfaceRequest() const;
-
-    MyCamera* PullSetCameraRequest() const;
 
     void TriggerEventPointerUpToRelevantSurface(MyPointerEvent event) const;
 
