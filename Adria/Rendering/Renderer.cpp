@@ -141,8 +141,8 @@ namespace adria
 		if (!g_Editor.IsActive()) CopyToBackbuffer(render_graph);
 		else g_Editor.AddRenderPass(render_graph);
 
-		CopyToTexturePass copy_pass(gfx, 200, 200);
-		copy_pass.AddPass(render_graph, RG_NAME(Backbuffer), RG_NAME(TiledDebugTarget), BlendMode::AdditiveBlend);
+		CopyToTexturePass copy_pass(gfx, render_width, render_height);
+		copy_pass.AddPass(render_graph, RG_NAME(Backbuffer), RG_NAME(FinalTexture), BlendMode::AdditiveBlend);
 
 		render_graph.Build();
 		render_graph.Execute();
