@@ -15,6 +15,12 @@ namespace adria
 		CreatePSOs();
 	}
 
+	CopyToTexturePass::CopyToTexturePass(GfxDevice* gfx, Uint32 w, Uint32 h, GfxTexture* texture)
+     : gfx(gfx), src_gfx_texture(texture), width(w), height(h)
+    {
+        CreatePSOs8();
+    }
+
 	CopyToTexturePass::~CopyToTexturePass()
 	{
 	}
@@ -29,9 +35,16 @@ namespace adria
 		rendergraph.AddPass<CopyToTexturePassData>("Copy To Texture Pass",
 			[=](CopyToTexturePassData& data, RenderGraphBuilder& builder)
 			{
+				if (src_gfx_texture != nullptr)
+				{
+					builder.WriteRenderTarget(texture_src, RGLoadStoreAccessOp::Preserve_Preserve);
+				}
+
 				builder.WriteRenderTarget(texture_dst, RGLoadStoreAccessOp::Preserve_Preserve);
 				data.texture_src = builder.ReadTexture(texture_src, ReadAccess_PixelShader);
 				builder.SetViewport(width, height);
+
+
 			},
 			[=](CopyToTexturePassData const& data, RenderGraphContext& context, GfxCommandList* cmd_list)
 			{
@@ -95,6 +108,19 @@ namespace adria
 		gfx_pso_desc.num_render_targets = 1;
 		gfx_pso_desc.rasterizer_state.cull_mode = GfxCullMode::None;
 		gfx_pso_desc.rtv_formats[0] = GfxFormat::R16G16B16A16_FLOAT;
+
+		copy_psos = std::make_unique<GfxGraphicsPipelineStatePermutations>(gfx, gfx_pso_desc);
+	}
+
+	void CopyToTexturePass::CreatePSOs8()
+	{
+		GfxGraphicsPipelineStateDesc gfx_pso_desc{};
+		gfx_pso_desc.root_signature = GfxRootSignatureID::Common;
+		gfx_pso_desc.VS = VS_FullscreenTriangle;
+		gfx_pso_desc.PS = PS_Copy;
+		gfx_pso_desc.num_render_targets = 1;
+		gfx_pso_desc.rasterizer_state.cull_mode = GfxCullMode::None;
+		gfx_pso_desc.rtv_formats[0] = GfxFormat::R8G8B8A8_UNORM;
 
 		copy_psos = std::make_unique<GfxGraphicsPipelineStatePermutations>(gfx, gfx_pso_desc);
 	}

@@ -83,6 +83,7 @@ int APIENTRY wWinMain(
 
     std::string s = GetLastErrorAsString();
 
+
     auto created_runtime = my_create_runtime();
     auto runtime = created_runtime.runtime;
     auto guests = created_runtime.guests;
@@ -91,7 +92,7 @@ int APIENTRY wWinMain(
     auto factory = runtime.GetFactory();
     auto device = runtime.GetDevice();
     auto queue = runtime.GetQueue();
-
+    
     //std::ifstream file("C:\\Users\\mendy\\Desktop\\glb-to-webgpu-component.wasm", std::ios::binary | std::ios::ate);
     std::ifstream file("C:\\Code\\glb-to-webgpu\\glb-to-webgpu-component.wasm", std::ios::binary | std::ios::ate);
 	//std::ifstream file("C:\\Code\\plugin-runtime\\guest\\target\\component.wasm", std::ios::binary | std::ios::ate);
@@ -104,13 +105,13 @@ int APIENTRY wWinMain(
     }
     const uint8_t* uint8Ptr = reinterpret_cast<const uint8_t*>(buffer.data());
     auto module_id = runtime.AddWasmModuleBytes(uint8Ptr, size);
-
+    /*
     std::thread guest_thread(&MyPluginRuntimeGuests::RunWasmModule, &guests, &module_id);
     guest_thread.detach();
 
     std::thread surface_request_thread(surface_request_loop, &runtime);
     surface_request_thread.detach();
-
+    */
 
     CommandLineOptions::Initialize(lpCmdLine);
     

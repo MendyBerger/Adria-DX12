@@ -288,6 +288,33 @@ namespace adria
 			}, RGPassType::Copy, RGPassFlags::ForceNoCull);
 	}
 
+
+
+	void RenderGraph::AddImportTextureCopyPass(GfxTexture* src, RGResourceName dest)
+	{
+		struct ExportTextureCopyPassData
+		{
+			RGTextureCopyDstId dest;
+		};
+
+		AddPass<ExportTextureCopyPassData>("Export Texture Copy Pass",
+			[=](ExportTextureCopyPassData& data, RenderGraphBuilder& builder)
+			{
+				RGTextureDesc god_rays_desc{};
+				god_rays_desc.format = GfxFormat::R8G8B8A8_UNORM;
+				god_rays_desc.width = 200;
+				god_rays_desc.height = 200;
+				god_rays_desc.heap_type = GfxResourceUsage::Default;
+
+				builder.DeclareTexture(dest, god_rays_desc);
+				data.dest = builder.WriteCopyDstTexture(dest);
+			},
+			[=](ExportTextureCopyPassData const& data, RenderGraphContext& context, GfxCommandList* cmd_list)
+			{
+				cmd_list->CopyTexture(context.GetCopyDstTexture(data.dest), *src);
+			}, RGPassType::Copy, RGPassFlags::ForceNoCull);
+	}
+
 	void RenderGraph::BuildAdjacencyLists()
 	{
 		adjacency_lists.resize(passes.size());

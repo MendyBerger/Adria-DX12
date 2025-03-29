@@ -5,6 +5,7 @@
 namespace adria
 {
 	class GfxDevice;
+	class GfxTexture;
 	class RenderGraph;
 
 	enum class BlendMode : Uint8
@@ -18,6 +19,7 @@ namespace adria
 	{
 	public:
 		CopyToTexturePass(GfxDevice* gfx, Uint32 w, Uint32 h);
+		CopyToTexturePass(GfxDevice* gfx, Uint32 w, Uint32 h, GfxTexture* texture);
 		~CopyToTexturePass();
 
 		void AddPass(RenderGraph& rendergraph,
@@ -29,11 +31,13 @@ namespace adria
 
 	private:
 		GfxDevice* gfx;
+		GfxTexture* src_gfx_texture = nullptr;
 		Uint32 width, height;
 		std::unique_ptr<GfxGraphicsPipelineStatePermutations> copy_psos;
 
 	private:
 		void CreatePSOs();
+		void CreatePSOs8();
 	};
 
 	class AddTexturesPass

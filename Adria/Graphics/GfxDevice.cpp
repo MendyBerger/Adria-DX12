@@ -447,7 +447,7 @@ namespace adria
 		ProcessReleaseQueue();
 		
 		ID3D12Resource * fb = GetBackbuffer()->GetNative();
-		pr_render->PaintFrames(fb);
+		//pr_render->PaintFrames(fb);
 
 		Bool present_successful = swapchain->Present(VSync.Get());
 		if (!present_successful && nsight_aftermath && nsight_aftermath->IsInitialized())

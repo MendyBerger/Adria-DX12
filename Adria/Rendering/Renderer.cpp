@@ -147,6 +147,7 @@ namespace adria
 			GfxTextureDesc desc{};
 			desc.width = 200;
 			desc.height = 200;
+			desc.format = GfxFormat::R8G8B8A8_UNORM;
 			hud_texture = std::make_unique<GfxTexture>(gfx, desc, textures->texture);
 			// update	
 		}
@@ -155,14 +156,18 @@ namespace adria
 		{
 			render_graph.ImportTexture(RG_NAME(HUD), hud_texture.get());
 
-			CopyToTexturePass copy_pass(gfx, render_width, render_height);
-			copy_pass.AddPass(render_graph, RG_NAME(Backbuffer), RG_NAME(HUD), BlendMode::AdditiveBlend);
+			CopyToTexturePass copy_pass(gfx, 200, 200, hud_texture.get());
+			render_graph.AddImportTextureCopyPass(hud_texture.get(), RG_NAME(HUD_TEMP));
+			copy_pass.AddPass(render_graph, RG_NAME(Backbuffer), RG_NAME(HUD_TEMP), BlendMode::AdditiveBlend);
 
 			render_graph.Build();
 			render_graph.Execute();
 		}
 		else
 		{
+			CopyToTexturePass copy_pass(gfx, 200, 200, hud_texture.get());
+			copy_pass.AddPass(render_graph, RG_NAME(Backbuffer), RG_NAME(VolumetricLightOutput), BlendMode::AdditiveBlend);
+
 			render_graph.Build();
 			render_graph.Execute();
 		}
