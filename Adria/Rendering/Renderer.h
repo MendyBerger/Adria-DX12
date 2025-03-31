@@ -165,8 +165,9 @@ namespace adria
 		//misc
 		ViewportData			 viewport_data;
 
-		// HUD texture
+		// HUD 
 		std::unique_ptr<GfxTexture> hud_texture;
+		std::unique_ptr<CopyToTexturePass> gimbal_pass;
 
 	private:
 		void RegisterEventListeners();
@@ -179,7 +180,7 @@ namespace adria
 		void UpdateFrameConstants(Float dt);
 		void CameraFrustumCulling();
 
-		void RenderImpl(RenderGraph& rg);
+		void RenderImpl(RenderGraph& rg, MyPluginRuntimeRender* pr_render);
 		void Render_Deferred(RenderGraph& rg);
 		void Render_PathTracing(RenderGraph& rg);
 

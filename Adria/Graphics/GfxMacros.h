@@ -16,7 +16,7 @@
 #endif
 
 #if GFX_PROFILING
-#define GFX_PROFILING_USE_TRACY 1
+#define GFX_PROFILING_USE_TRACY 0
 #define GFX_ENABLE_NV_PERF
 #endif
 

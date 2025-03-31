@@ -35,11 +35,6 @@ namespace adria
 		rendergraph.AddPass<CopyToTexturePassData>("Copy To Texture Pass",
 			[=](CopyToTexturePassData& data, RenderGraphBuilder& builder)
 			{
-				if (src_gfx_texture != nullptr)
-				{
-					builder.WriteRenderTarget(texture_src, RGLoadStoreAccessOp::Preserve_Preserve);
-				}
-
 				builder.WriteRenderTarget(texture_dst, RGLoadStoreAccessOp::Preserve_Preserve);
 				data.texture_src = builder.ReadTexture(texture_src, ReadAccess_PixelShader);
 				builder.SetViewport(width, height);
@@ -63,6 +58,10 @@ namespace adria
 							desc.blend_state.render_target[0].src_blend = GfxBlend::SrcAlpha;
 							desc.blend_state.render_target[0].dest_blend = GfxBlend::InvSrcAlpha;
 							desc.blend_state.render_target[0].blend_op = GfxBlendOp::Add;
+							desc.blend_state.render_target[0].src_blend_alpha = GfxBlend::Zero;
+							desc.blend_state.render_target[0].dest_blend_alpha = GfxBlend::One;
+							desc.blend_state.render_target[0].blend_op_alpha = GfxBlendOp::Add;
+
 						});
 					cmd_list->SetPipelineState(copy_psos->Get());
 					break;
@@ -86,6 +85,7 @@ namespace adria
 				cmd_list->SetRootConstant(1, dst.GetIndex(), 0);
 				cmd_list->SetTopology(GfxPrimitiveTopology::TriangleList);
 				cmd_list->Draw(3);
+
 			}, RGPassType::Graphics, RGPassFlags::None);
 	}
 

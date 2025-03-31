@@ -105,13 +105,13 @@ int APIENTRY wWinMain(
     }
     const uint8_t* uint8Ptr = reinterpret_cast<const uint8_t*>(buffer.data());
     auto module_id = runtime.AddWasmModuleBytes(uint8Ptr, size);
-    /*
+    
     std::thread guest_thread(&MyPluginRuntimeGuests::RunWasmModule, &guests, &module_id);
     guest_thread.detach();
 
     std::thread surface_request_thread(surface_request_loop, &runtime);
     surface_request_thread.detach();
-    */
+    
 
     CommandLineOptions::Initialize(lpCmdLine);
     

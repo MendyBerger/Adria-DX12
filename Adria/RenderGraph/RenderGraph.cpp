@@ -230,23 +230,24 @@ namespace adria
 
 
 
-	void RenderGraph::AddImportTextureCopyPass(GfxTexture* src, RGResourceName dest)
+	void RenderGraph::AddImportTextureCopyPass(GfxTexture* src, RGResourceName dest, Uint32 w, Uint32 h)
 	{
 		struct ExportTextureCopyPassData
 		{
 			RGTextureCopyDstId dest;
 		};
 
-		AddPass<ExportTextureCopyPassData>("Export Texture Copy Pass",
+		AddPass<ExportTextureCopyPassData>("Import Texture Copy Pass",
 			[=](ExportTextureCopyPassData& data, RenderGraphBuilder& builder)
 			{
-				RGTextureDesc god_rays_desc{};
-				god_rays_desc.format = GfxFormat::R8G8B8A8_UNORM;
-				god_rays_desc.width = 200;
-				god_rays_desc.height = 200;
-				god_rays_desc.heap_type = GfxResourceUsage::Default;
+				RGTextureDesc desc{};
+				desc.format = GfxFormat::R8G8B8A8_UNORM;
+				desc.width = w;
+				desc.height = h;
+				desc.heap_type = GfxResourceUsage::Default;
 
-				builder.DeclareTexture(dest, god_rays_desc);
+
+				builder.DeclareTexture(dest, desc);
 				data.dest = builder.WriteCopyDstTexture(dest);
 			},
 			[=](ExportTextureCopyPassData const& data, RenderGraphContext& context, GfxCommandList* cmd_list)

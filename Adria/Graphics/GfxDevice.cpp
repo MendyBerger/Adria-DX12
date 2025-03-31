@@ -311,7 +311,7 @@ namespace adria
 		ProcessReleaseQueue();
 
 		ID3D12Resource * fb = GetBackbuffer()->GetNative();
-		//pr_render->PaintFrames(fb);
+		pr_render->PaintFrames(fb);
 
 		if (nsight_perf_manager)
 		{

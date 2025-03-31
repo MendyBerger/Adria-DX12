@@ -79,6 +79,8 @@ namespace adria
 		void ImportTexture(RGResourceName name, GfxTexture* texture);
 		void ImportBuffer(RGResourceName name, GfxBuffer* buffer);
 
+		void AddImportTextureCopyPass(GfxTexture* src, RGResourceName dest, Uint32 w, Uint32 h);
+
 		void ExportTexture(RGResourceName name, GfxTexture* texture);
 		void ExportBuffer(RGResourceName name, GfxBuffer* buffer);
 
@@ -198,8 +200,5 @@ namespace adria
 
 		void AddExportBufferCopyPass(RGResourceName export_buffer, GfxBuffer* buffer);
 		void AddExportTextureCopyPass(RGResourceName export_texture, GfxTexture* texture);
-
-	public:
-		void AddImportTextureCopyPass(GfxTexture* src, RGResourceName dest);
 	};
 }
