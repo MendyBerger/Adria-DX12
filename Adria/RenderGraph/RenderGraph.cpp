@@ -4,13 +4,12 @@
 #include "RenderGraph.h"
 #include "Graphics/GfxCommandList.h"
 #include "Graphics/GfxRenderPass.h"
-#include "Graphics/GfxProfiler.h"
-#include "Graphics/GfxTracyProfiler.h"
+#include "Graphics/GfxScopedEvent.h"
 #include "Utilities/StringUtil.h"
 #include "Utilities/FilesUtil.h"
 #include "Core/Paths.h"
-#include "Logging/Logger.h"
-#include "pix3.h"
+#include "Core/ConsoleManager.h"
+#include "Graphics/GfxTracyProfiler.h"
 
 #if GFX_MULTITHREADED
 #define RG_MULTITHREADED 1
@@ -18,9 +17,19 @@
 #define RG_MULTITHREADED 0
 #endif
 
+ADRIA_DEBUGZONE_BEGIN
+
 namespace adria
 {
-	extern Bool dump_render_graph = false;
+	extern Bool g_DumpRenderGraph = false;
+#if GFX_PROFILING
+	static constexpr Bool g_UseDependencyLevels = false;
+#else
+	static constexpr Bool g_UseDependencyLevels = true;
+#endif
+
+	static TAutoConsoleVariable<Bool> RGCullPasses("rg.CullPasses", true, "Determines if the render graph should cull unused passes or not");
+	static TAutoConsoleVariable<Bool> RGAsyncCompute("rg.AsyncCompute", false, "Determines if the async compute is enabled or not");
 
 	RGTextureId RenderGraph::DeclareTexture(RGResourceName name, RGTextureDesc const& desc)
 	{
@@ -116,19 +125,39 @@ namespace adria
 		}
 	}
 
-	void RenderGraph::Build()
+	void RenderGraph::Compile()
 	{
+		ZoneScopedN("RenderGraph::Compile");
 		BuildAdjacencyLists();
 		TopologicalSort();
-		BuildDependencyLevels();
+		if (g_UseDependencyLevels)
+		{
+			BuildDependencyLevels();
+		}
+		else
+		{
+			Uint64 max_level = passes.size();
+			dependency_levels.reserve(max_level);
+			for (Uint32 i = 0; i < max_level; ++i)
+			{
+				dependency_levels.emplace_back(*this, i);
+				dependency_levels[i].AddPass(passes[i]);
+			}
+		}
 		CullPasses();
+		ResolveAsync();
+		ResolveEvents();
 		CalculateResourcesLifetime();
-		for (auto& dependency_level : dependency_levels) dependency_level.Setup();
-		if (dump_render_graph) Dump("rendergraph.gv");
+		for (DependencyLevel& dependency_level : dependency_levels)
+		{
+			dependency_level.Setup();
+		}
+		if (g_DumpRenderGraph) Dump("rendergraph.gv");
 	}
 
 	void RenderGraph::Execute()
 	{
+		ZoneScopedN("RenderGraph::Execute");
 #if RG_MULTITHREADED
 		Execute_Multithreaded();
 #else
@@ -140,113 +169,24 @@ namespace adria
 	{
 		pool.Tick();
 
-		GfxCommandList* cmd_list = gfx->GetCommandList();
+		RenderGraphExecutionContext exec_ctx{};
+		exec_ctx.gfx = gfx;
+		exec_ctx.graphics_cmd_list = gfx->GetGraphicsCommandList();
+		exec_ctx.compute_cmd_list = gfx->GetComputeCommandList();
+		exec_ctx.graphics_fence = &gfx->GetGraphicsFence();
+		exec_ctx.compute_fence = &gfx->GetComputeFence();
+		exec_ctx.graphics_fence_value = gfx->GetGraphicsFenceValue();
+		exec_ctx.compute_fence_value = gfx->GetComputeFenceValue();
 		for (Uint64 i = 0; i < dependency_levels.size(); ++i)
 		{
-			auto& dependency_level = dependency_levels[i];
-			for (auto tex_id : dependency_level.texture_creates)
-			{
-				RGTexture* rg_texture = GetRGTexture(tex_id);
-				rg_texture->resource = pool.AllocateTexture(rg_texture->desc);
-				CreateTextureViews(tex_id);
-				rg_texture->SetName();
-			}
-			for (auto buf_id : dependency_level.buffer_creates)
-			{
-				RGBuffer* rg_buffer = GetRGBuffer(buf_id);
-				rg_buffer->resource = pool.AllocateBuffer(rg_buffer->desc);
-				CreateBufferViews(buf_id);
-				rg_buffer->SetName();
-			}
-			for (auto const& [tex_id, state] : dependency_level.texture_state_map)
-			{
-				RGTexture* rg_texture = GetRGTexture(tex_id);
-				GfxTexture* texture = rg_texture->resource;
-				if (dependency_level.texture_creates.contains(tex_id))
-				{
-					if (!HasAllFlags(texture->GetDesc().initial_state, state))
-					{
-						cmd_list->TextureBarrier(*texture, texture->GetDesc().initial_state, state);
-					}
-					continue;
-				}
-				Bool found = false;
-				for (Int32 j = (Int32)i - 1; j >= 0; --j)
-				{
-					auto& prev_dependency_level = dependency_levels[j];
-					if (prev_dependency_level.texture_state_map.contains(tex_id))
-					{
-						GfxResourceState prev_state = prev_dependency_level.texture_state_map[tex_id];
-						if (prev_state != state) cmd_list->TextureBarrier(*texture, prev_state, state);
-						found = true;
-						break;
-					}
-				}
-				if (!found && rg_texture->imported)
-				{
-					GfxResourceState prev_state = rg_texture->desc.initial_state;
-					if (prev_state != state) cmd_list->TextureBarrier(*texture, prev_state, state);
-				}
-			}
-			for (auto const& [buf_id, state] : dependency_level.buffer_state_map)
-			{
-				RGBuffer* rg_buffer = GetRGBuffer(buf_id);
-				GfxBuffer* buffer = rg_buffer->resource;
-				if (dependency_level.buffer_creates.contains(buf_id))
-				{
-					if (state != GfxResourceState::Common)
-					{
-						cmd_list->BufferBarrier(*buffer, GfxResourceState::Common, state);
-					}
-					continue;
-				}
-				Bool found = false;
-				for (Int32 j = (Int32)i - 1; j >= 0; --j)
-				{
-					auto& prev_dependency_level = dependency_levels[j];
-					if (prev_dependency_level.buffer_state_map.contains(buf_id))
-					{
-						GfxResourceState prev_state = prev_dependency_level.buffer_state_map[buf_id];
-						if (prev_state != state) cmd_list->BufferBarrier(*buffer, prev_state, state);
-						found = true;
-						break;
-					}
-				}
-				if (!found && rg_buffer->imported)
-				{
-					if (GfxResourceState::Common != state) cmd_list->BufferBarrier(*buffer, GfxResourceState::Common, state);
-				}
-			}
-
-			cmd_list->FlushBarriers();
-			dependency_level.Execute(gfx, cmd_list);
-
-			for (RGTextureId tex_id : dependency_level.texture_destroys)
-			{
-				RGTexture* rg_texture = GetRGTexture(tex_id);
-				GfxTexture* texture = rg_texture->resource;
-				GfxResourceState initial_state = texture->GetDesc().initial_state;
-				ADRIA_ASSERT(dependency_level.texture_state_map.contains(tex_id));
-				GfxResourceState state = dependency_level.texture_state_map[tex_id];
-				if (initial_state != state) cmd_list->TextureBarrier(*texture, state, initial_state);
-				if (!rg_texture->imported) pool.ReleaseTexture(rg_texture->resource);
-			}
-			for (RGBufferId buf_id : dependency_level.buffer_destroys)
-			{
-				RGBuffer* rg_buffer = GetRGBuffer(buf_id);
-				GfxBuffer* buffer = rg_buffer->resource;
-				ADRIA_ASSERT(dependency_level.buffer_state_map.contains(buf_id));
-				GfxResourceState state = dependency_level.buffer_state_map[buf_id];
-				if(state != GfxResourceState::Common) cmd_list->BufferBarrier(*buffer, state, GfxResourceState::Common);
-				if (!rg_buffer->imported) pool.ReleaseBuffer(rg_buffer->resource);
-			}
-			cmd_list->FlushBarriers();
+			DependencyLevel& dependency_level = dependency_levels[i];
+			dependency_level.Execute(exec_ctx);
 		}
 	}
 
 	void RenderGraph::Execute_Multithreaded()
 	{
-		ADRIA_ASSERT_MSG(false, "Not implemented!");
+		ADRIA_ASSERT_MSG(false, "Not yet implemented!");
 	}
 
 	void RenderGraph::AddExportBufferCopyPass(RGResourceName export_buffer, GfxBuffer* buffer)
@@ -320,13 +260,13 @@ namespace adria
 		adjacency_lists.resize(passes.size());
 		for (Uint64 i = 0; i < passes.size(); ++i)
 		{
-			auto& pass = passes[i];
+			RGPassBase* pass = passes[i];
 			std::vector<Uint64>& pass_adjacency_list = adjacency_lists[i];
 			for (Uint64 j = i + 1; j < passes.size(); ++j)
 			{
-				auto& other_pass = passes[j];
+				RGPassBase* other_pass = passes[j];
 				Bool depends = false;
-				for (auto other_node_read : other_pass->texture_reads)
+				for (RGTextureId other_node_read : other_pass->texture_reads)
 				{
 					if (pass->texture_writes.find(other_node_read) != pass->texture_writes.end())
 					{
@@ -337,7 +277,7 @@ namespace adria
 				}
 				if (depends) continue;
 
-				for (auto other_node_read : other_pass->buffer_reads)
+				for (RGBufferId other_node_read : other_pass->buffer_reads)
 				{
 					if (pass->buffer_writes.find(other_node_read) != pass->buffer_writes.end())
 					{
@@ -366,46 +306,56 @@ namespace adria
 		for (Uint64 u = 0; u < topologically_sorted_passes.size(); ++u)
 		{
 			Uint64 i = topologically_sorted_passes[u];
-			for (auto v : adjacency_lists[i])
+			for (Uint64 v : adjacency_lists[i])
 			{
 				if (distances[v] < distances[i] + 1) distances[v] = distances[i] + 1;
 			}
 		}
 
-		dependency_levels.resize(*std::max_element(std::begin(distances), std::end(distances)) + 1, DependencyLevel(*this));
-		for (Uint64 i = 0; i < passes.size(); ++i)
+		Uint64 max_level = *std::max_element(std::begin(distances), std::end(distances)) + 1;
+		dependency_levels.reserve(max_level);
+		for (Uint32 i = 0; i < max_level; ++i)
+		{
+			dependency_levels.emplace_back(*this, i); 
+		}
+		for (Uint32 i = 0; i < passes.size(); ++i)
 		{
 			Uint64 level = distances[i];
-			dependency_levels[level].AddPass(passes[i].get());
+			dependency_levels[level].AddPass(passes[i]);
 		}
 	}
 
 	void RenderGraph::CullPasses()
 	{
-		for (auto& pass : passes)
+		for (RGPassBase* pass : passes)
 		{
 			pass->ref_count = pass->texture_writes.size() + pass->buffer_writes.size();
-			for (auto id : pass->texture_reads)
+			for (RGTextureId id : pass->texture_reads)
 			{
-				auto* consumed = GetRGTexture(id);
+				RGTexture* consumed = GetRGTexture(id);
 				++consumed->ref_count;
 			}
-			for (auto id : pass->buffer_reads)
+			for (RGBufferId id : pass->buffer_reads)
 			{
-				auto* consumed = GetRGBuffer(id);
+				RGBuffer* consumed = GetRGBuffer(id);
 				++consumed->ref_count;
 			}
 
-			for (auto id : pass->texture_writes)
+			for (RGTextureId id : pass->texture_writes)
 			{
-				auto* written = GetRGTexture(id);
-				written->writer = pass.get();
+				RGTexture* written = GetRGTexture(id);
+				written->writer = pass;
 			}
-			for (auto id : pass->buffer_writes)
+			for (RGBufferId id : pass->buffer_writes)
 			{
-				auto* written = GetRGBuffer(id);
-				written->writer = pass.get();
+				RGBuffer* written = GetRGBuffer(id);
+				written->writer = pass;
 			}
+		}
+
+		if (!RGCullPasses.Get())
+		{
+			return;
 		}
 
 		std::stack<RenderGraphResource*> zero_ref_resources;
@@ -416,19 +366,18 @@ namespace adria
 		{
 			RenderGraphResource* unreferenced_resource = zero_ref_resources.top();
 			zero_ref_resources.pop();
-			auto* writer = unreferenced_resource->writer;
+			RGPassBase* writer = unreferenced_resource->writer;
 			if (writer == nullptr || !writer->CanBeCulled()) continue;
-
 			if (--writer->ref_count == 0)
 			{
-				for (auto id : writer->texture_reads)
+				for (RGTextureId id : writer->texture_reads)
 				{
-					auto* texture = GetRGTexture(id);
+					RGTexture* texture = GetRGTexture(id);
 					if (--texture->ref_count == 0) zero_ref_resources.push(texture);
 				}
-				for (auto id : writer->buffer_reads)
+				for (RGBufferId id : writer->buffer_reads)
 				{
-					auto* buffer = GetRGBuffer(id);
+					RGBuffer* buffer = GetRGBuffer(id);
 					if (--buffer->ref_count == 0) zero_ref_resources.push(buffer);
 				}
 			}
@@ -439,29 +388,29 @@ namespace adria
 	{
 		for (auto& dependency_level : dependency_levels)
 		{
-			for (auto& pass : dependency_level.passes)
+			for (RGPassBase* pass : dependency_level.passes)
 			{
 				if (pass->IsCulled()) continue;
-				for (auto id : pass->texture_writes)
+				for (RGTextureId id : pass->texture_writes)
 				{
 					if (!pass->texture_state_map.contains(id)) continue;
 					RGTexture* rg_texture = GetRGTexture(id);
 					rg_texture->last_used_by = pass;
 				}
-				for (auto id : pass->buffer_writes)
+				for (RGBufferId id : pass->buffer_writes)
 				{
 					if (!pass->buffer_state_map.contains(id)) continue;
 					RGBuffer* rg_buffer = GetRGBuffer(id);
 					rg_buffer->last_used_by = pass;
 				}
 
-				for (auto id : pass->texture_reads)
+				for (RGTextureId id : pass->texture_reads)
 				{
 					if (!pass->texture_state_map.contains(id)) continue;
 					RGTexture* rg_texture = GetRGTexture(id);
 					rg_texture->last_used_by = pass;
 				}
-				for (auto id : pass->buffer_reads)
+				for (RGBufferId id : pass->buffer_reads)
 				{
 					if (!pass->buffer_state_map.contains(id)) continue;
 					RGBuffer* rg_buffer = GetRGBuffer(id);
@@ -490,6 +439,159 @@ namespace adria
 			if (!visited[j]) DepthFirstSearch(j, visited, topologically_sorted_passes);
 		}
 		topologically_sorted_passes.push_back(i);
+	}
+
+	void RenderGraph::ResolveAsync()
+	{
+#if GFX_ASYNC_COMPUTE
+		if (!RGAsyncCompute.Get())
+		{
+			return;
+		}
+
+		std::vector<RGPassBase*> compute_queue_passes;
+		std::unordered_set<RGPassBase*> pre_graphics_queue_passes;
+		std::unordered_set<RGPassBase*> post_graphics_queue_passes;
+		Uint64 compute_fence = 0;
+		Uint64 graphics_fence = 0;
+
+		for (Uint64 pass_index : topologically_sorted_passes)
+		{
+			RGPassBase* pass = passes[pass_index];
+			if (pass->IsCulled()) continue;
+
+			if (pass->type == RGPassType::AsyncCompute)
+			{
+				for (RGTextureId read_texture : pass->texture_reads)
+				{
+					for (Int64 i = (Int64)pass_index - 1; i >= 0; --i)
+					{
+						RGPassBase* pre_pass = passes[i];
+						if (pre_pass->IsCulled() || pre_pass->type == RGPassType::AsyncCompute) continue;
+
+						if (pre_pass->texture_writes.find(read_texture) != pre_pass->texture_writes.end())
+						{
+							pre_graphics_queue_passes.insert(pre_pass);
+							break;
+						}
+					}
+				}
+				for (RGBufferId read_buffer : pass->buffer_reads)
+				{
+					for (Int64 i = (Int64)pass_index - 1; i >= 0; --i)
+					{
+						RGPassBase* pre_pass = passes[i];
+						if (pre_pass->IsCulled() || pre_pass->type == RGPassType::AsyncCompute) continue;
+
+						if (pre_pass->buffer_writes.find(read_buffer) != pre_pass->buffer_writes.end())
+						{
+							pre_graphics_queue_passes.insert(pre_pass);
+							break;
+						}
+					}
+				}
+				for (RGTextureId write_texture : pass->texture_writes)
+				{
+					for (Uint64 i = pass_index + 1; i < passes.size(); ++i)
+					{
+						RGPassBase* post_pass = passes[i];
+						if (post_pass->IsCulled() || post_pass->type == RGPassType::AsyncCompute) continue;
+
+						if (post_pass->texture_reads.find(write_texture) != post_pass->texture_reads.end())
+						{
+							post_graphics_queue_passes.insert(post_pass);
+							break;
+						}
+					}
+				}
+				for (RGBufferId write_buffer : pass->buffer_writes)
+				{
+					for (Uint64 i = pass_index + 1; i < passes.size(); ++i)
+					{
+						RGPassBase* post_pass = passes[i];
+						if (post_pass->IsCulled() || post_pass->type == RGPassType::AsyncCompute) continue;
+
+						if (post_pass->buffer_reads.find(write_buffer) != post_pass->buffer_reads.end())
+						{
+							pre_graphics_queue_passes.insert(post_pass);
+							break;
+						}
+					}
+				}
+				compute_queue_passes.push_back(pass);
+			}
+			else if (!compute_queue_passes.empty())
+			{
+				if (!pre_graphics_queue_passes.empty())
+				{
+					RGPassBase* last_pre_pass = *std::max_element(
+						pre_graphics_queue_passes.begin(),
+						pre_graphics_queue_passes.end(),
+						[](RGPassBase* a, RGPassBase* b) { return a->id < b->id; }
+					);
+
+					if (last_pre_pass->signal_value == Uint64(-1))
+					{
+						last_pre_pass->signal_value = ++graphics_fence;
+					}
+					RGPassBase* first_compute_pass = compute_queue_passes.front();
+					first_compute_pass->wait_value = last_pre_pass->signal_value;
+					first_compute_pass->wait_graphics_pass_id = last_pre_pass->id;
+				}
+
+				if (!post_graphics_queue_passes.empty())
+				{
+					RGPassBase* first_post_pass = *std::min_element(
+						post_graphics_queue_passes.begin(),
+						post_graphics_queue_passes.end(),
+						[](RGPassBase* a, RGPassBase* b) { return a->id < b->id; }
+					);
+
+					RGPassBase* last_compute_pass = compute_queue_passes.back();
+					if (last_compute_pass->signal_value == Uint64(-1))
+					{
+						last_compute_pass->signal_value = ++compute_fence;
+					}
+
+					first_post_pass->wait_value = last_compute_pass->signal_value;
+					last_compute_pass->signal_graphics_pass_id = first_post_pass->id;
+				}
+				compute_queue_passes.clear();
+				pre_graphics_queue_passes.clear();
+				post_graphics_queue_passes.clear();
+			}
+		}
+#endif
+	}
+
+	void RenderGraph::ResolveEvents()
+	{
+		std::vector<Uint32> events_to_start;
+		Uint32 events_to_add = 0;
+		RGPassBase* last_active_pass = nullptr;
+		for (RGPassBase* const pass : passes)
+		{
+			if (pass->IsCulled())
+			{
+				while (pass->num_events_to_end > 0 && pass->events_to_start.size() > 0)
+				{
+					pass->num_events_to_end--;
+					pass->events_to_start.pop_back();
+				}
+				for (Uint32 event_idx : pass->events_to_start) events_to_start.push_back(event_idx);
+				events_to_add += pass->num_events_to_end;
+			}
+			else
+			{
+				for (Uint32 eventIndex : events_to_start) pass->events_to_start.push_back(eventIndex);
+				pass->num_events_to_end += events_to_add;
+				events_to_start.clear();
+				events_to_add = 0;
+				last_active_pass = pass;
+			}
+		}
+		if (last_active_pass) last_active_pass->num_events_to_end += events_to_add;
+		ADRIA_ASSERT(events_to_start.empty());
 	}
 
 	RGTexture* RenderGraph::GetRGTexture(RGTextureId handle) const
@@ -931,7 +1033,7 @@ namespace adria
 
 	void RenderGraph::DependencyLevel::Setup()
 	{
-		for (auto& pass : passes)
+		for (RGPassBase* pass : passes)
 		{
 			if (pass->IsCulled()) continue;
 
@@ -951,11 +1053,38 @@ namespace adria
 		}
 	}
 
-	void RenderGraph::DependencyLevel::Execute(GfxDevice* gfx, GfxCommandList* cmd_list)
+	void RenderGraph::DependencyLevel::Execute(RenderGraphExecutionContext const& exec_ctx)
 	{
+		PreExecute(exec_ctx.graphics_cmd_list);
 		for (auto& pass : passes)
 		{
 			if (pass->IsCulled()) continue;
+
+#if GFX_ASYNC_COMPUTE
+			GfxCommandList* cmd_list = pass->type == RGPassType::AsyncCompute && RGAsyncCompute.Get() ? exec_ctx.compute_cmd_list : exec_ctx.graphics_cmd_list;
+#else
+			GfxCommandList* cmd_list = exec_ctx.graphics_cmd_list;
+#endif
+			if (pass->wait_value != UINT64_MAX)
+			{
+				cmd_list->End();
+				cmd_list->Submit();
+				cmd_list->Begin();
+				if (pass->type == RGPassType::AsyncCompute)
+				{
+					cmd_list->Wait(*exec_ctx.graphics_fence, exec_ctx.graphics_fence_value + pass->wait_value);
+				}
+				else
+				{
+					cmd_list->Wait(*exec_ctx.compute_fence, exec_ctx.compute_fence_value + pass->wait_value);
+				}
+			}
+
+			for (Uint32 event_idx : pass->events_to_start)
+			{
+				cmd_list->BeginEvent(rg.events[event_idx].name, GfxEventColor(0xff, 0xff, 0x00));
+			}
+
 			RenderGraphContext rg_resources(rg, *pass);
 			if (pass->type == RGPassType::Graphics)
 			{
@@ -1102,28 +1231,167 @@ namespace adria
 				render_pass_desc.height = pass->viewport_height;
 				render_pass_desc.legacy = pass->UseLegacyRenderPasses();
 
-				PIXScopedEvent(cmd_list->GetNative(), PIX_COLOR_DEFAULT, pass->name.c_str());
-				AdriaGfxProfileScope(cmd_list, pass->name.c_str());
+				ZoneTransientN(__tracy, pass->name.c_str(), true);
+				AdriaGfxScopedEvent(cmd_list, pass->name.c_str());
 				TracyGfxProfileScope(cmd_list->GetNative(), pass->name.c_str());
 				cmd_list->SetContext(GfxCommandList::Context::Graphics);
 				cmd_list->BeginRenderPass(render_pass_desc);
-				pass->Execute(rg_resources,cmd_list);
+				pass->Execute(rg_resources, cmd_list);
 				cmd_list->EndRenderPass();
 			}
 			else
 			{
-				PIXScopedEvent(cmd_list->GetNative(), PIX_COLOR_DEFAULT, pass->name.c_str());
-				AdriaGfxProfileScope(cmd_list, pass->name.c_str());
+				ZoneTransientN(__tracy, pass->name.c_str(), true);
+				AdriaGfxScopedEvent(cmd_list, pass->name.c_str());
 				TracyGfxProfileScope(cmd_list->GetNative(), pass->name.c_str());
 				cmd_list->SetContext(GfxCommandList::Context::Compute);
 				pass->Execute(rg_resources, cmd_list);
 			}
-		}
+
+			for (Uint32 i = 0; i < pass->num_events_to_end; ++i)
+			{
+				cmd_list->EndEvent();
+			}
+
+			if (pass->signal_value != UINT64_MAX)
+			{
+				cmd_list->End();
+				if (pass->type == RGPassType::AsyncCompute)
+				{
+					cmd_list->Signal(*exec_ctx.compute_fence, exec_ctx.compute_fence_value + pass->signal_value);
+					exec_ctx.gfx->SetComputeFenceValue(exec_ctx.compute_fence_value + pass->signal_value);
+				}
+				else
+				{
+					cmd_list->Signal(*exec_ctx.graphics_fence, exec_ctx.graphics_fence_value + pass->signal_value);
+					exec_ctx.gfx->SetGraphicsFenceValue(exec_ctx.graphics_fence_value + pass->signal_value);
+				}
+				cmd_list->Submit();
+				cmd_list->Begin();
+			}
+		} 
+		PostExecute(exec_ctx.graphics_cmd_list);
 	}
 
-	void RenderGraph::DependencyLevel::Execute(GfxDevice* gfx, std::span<GfxCommandList*> const& cmd_lists)
+	void RenderGraph::DependencyLevel::PreExecute(GfxCommandList* cmd_list)
 	{
-		ADRIA_ASSERT_MSG(false, "Not yet implemented");
+		for (RGTextureId tex_id : texture_creates)
+		{
+			RGTexture* rg_texture = rg.GetRGTexture(tex_id);
+			rg_texture->resource = rg.pool.AllocateTexture(rg_texture->desc);
+			rg.CreateTextureViews(tex_id);
+			rg_texture->SetName();
+		}
+		for (RGBufferId buf_id : buffer_creates)
+		{
+			RGBuffer* rg_buffer = rg.GetRGBuffer(buf_id);
+			rg_buffer->resource = rg.pool.AllocateBuffer(rg_buffer->desc);
+			rg.CreateBufferViews(buf_id);
+			rg_buffer->SetName();
+		}
+		for (auto const& [tex_id, state] : texture_state_map)
+		{
+			RGTexture* rg_texture = rg.GetRGTexture(tex_id);
+			GfxTexture* texture = rg_texture->resource;
+			if (texture_creates.contains(tex_id))
+			{
+				if (!HasFlag(texture->GetDesc().initial_state, state))
+				{
+					cmd_list->TextureBarrier(*texture, texture->GetDesc().initial_state, state);
+				}
+				continue;
+			}
+			Bool found = false;
+			for (Int32 j = (Int32)level_index - 1; j >= 0; --j)
+			{
+				auto& prev_dependency_level = rg.dependency_levels[j];
+				if (prev_dependency_level.texture_state_map.contains(tex_id))
+				{
+					GfxResourceState prev_state = prev_dependency_level.texture_state_map[tex_id];
+					if (prev_state != state) cmd_list->TextureBarrier(*texture, prev_state, state);
+					found = true;
+					break;
+				}
+			}
+			if (!found && rg_texture->imported)
+			{
+				GfxResourceState prev_state = rg_texture->desc.initial_state;
+				if (prev_state != state) cmd_list->TextureBarrier(*texture, prev_state, state);
+			}
+		}
+		for (auto const& [buf_id, state] : buffer_state_map)
+		{
+			RGBuffer* rg_buffer = rg.GetRGBuffer(buf_id);
+			GfxBuffer* buffer = rg_buffer->resource;
+			if (buffer_creates.contains(buf_id))
+			{
+				if (state != GfxResourceState::Common)
+				{
+					cmd_list->BufferBarrier(*buffer, GfxResourceState::Common, state);
+				}
+				continue;
+			}
+			Bool found = false;
+			for (Int32 j = (Int32)level_index - 1; j >= 0; --j)
+			{
+				auto& prev_dependency_level = rg.dependency_levels[j];
+				if (prev_dependency_level.buffer_state_map.contains(buf_id))
+				{
+					GfxResourceState prev_state = prev_dependency_level.buffer_state_map[buf_id];
+					if (prev_state != state) cmd_list->BufferBarrier(*buffer, prev_state, state);
+					found = true;
+					break;
+				}
+			}
+			if (!found && rg_buffer->imported)
+			{
+				if (GfxResourceState::Common != state) cmd_list->BufferBarrier(*buffer, GfxResourceState::Common, state);
+			}
+		}
+		cmd_list->FlushBarriers();
+	}
+
+	void RenderGraph::DependencyLevel::PostExecute(GfxCommandList* cmd_list)
+	{
+		for (RGTextureId tex_id : texture_destroys)
+		{
+			RGTexture* rg_texture = rg.GetRGTexture(tex_id);
+			GfxTexture* texture = rg_texture->resource;
+			GfxResourceState initial_state = texture->GetDesc().initial_state;
+			ADRIA_ASSERT(texture_state_map.contains(tex_id));
+			GfxResourceState state = texture_state_map[tex_id];
+			if (initial_state != state) cmd_list->TextureBarrier(*texture, state, initial_state);
+			if (!rg_texture->imported) rg.pool.ReleaseTexture(rg_texture->resource);
+		}
+		for (RGBufferId buf_id : buffer_destroys)
+		{
+			RGBuffer* rg_buffer = rg.GetRGBuffer(buf_id);
+			GfxBuffer* buffer = rg_buffer->resource;
+			ADRIA_ASSERT(buffer_state_map.contains(buf_id));
+			GfxResourceState state = buffer_state_map[buf_id];
+			if (state != GfxResourceState::Common) cmd_list->BufferBarrier(*buffer, state, GfxResourceState::Common);
+			if (!rg_buffer->imported) rg.pool.ReleaseBuffer(rg_buffer->resource);
+		}
+		cmd_list->FlushBarriers();
+	}
+
+	void RenderGraph::PushEvent(Char const* name)
+	{
+		if (g_UseDependencyLevels) return;
+		pending_event_indices.push_back(AddEvent(name));
+	}
+
+	void RenderGraph::PopEvent()
+	{
+		if (g_UseDependencyLevels) return;
+		if (!pending_event_indices.empty())
+		{
+			pending_event_indices.pop_back();
+		}
+		else
+		{
+			passes.back()->num_events_to_end++;
+		}
 	}
 
 	void RenderGraph::Dump(Char const* graph_file_name)
@@ -1167,46 +1435,46 @@ namespace adria
 		graphviz.defaults += std::format("node [shape=record, fontname=\"{}\", fontsize={}, margin=\"0.2,0.03\"]\n", style.font.name, style.font.size);
 
 		auto PairHash = [](std::pair<Uint64, Uint64> const& p)
-		{
-			return std::hash<Uint64>{}(p.first) + std::hash<Uint64>{}(p.second);
-		};
+			{
+				return std::hash<Uint64>{}(p.first) + std::hash<Uint64>{}(p.second);
+			};
 		std::unordered_set<std::pair<Uint64, Uint64>, decltype(PairHash)> declared_buffers;
 		std::unordered_set<std::pair<Uint64, Uint64>, decltype(PairHash)> declared_textures;
-		auto DeclareBuffer  = [&declared_buffers,&graphviz, this](RGBuffer* buffer)
-		{
-			auto decl_pair = std::make_pair(buffer->id, buffer->version);
-			if (!declared_buffers.contains(decl_pair))
+		auto DeclareBuffer = [&declared_buffers, &graphviz, this](RGBuffer* buffer)
 			{
-				buffer->desc.size;
-				graphviz.declarations += std::format("B{}_{} ", buffer->id, buffer->version);
-				std::string label = std::format("<{}<br/>dimension: Buffer<br/>size: {} bytes <br/>format: {} <br/>version: {} <br/>refs: {}<br/>{}>", 
-					buffer->name, buffer->desc.size, GfxFormatToString(buffer->desc.format), buffer->version, buffer->ref_count, buffer->imported ? "Imported" : "Transient");
-				graphviz.declarations += std::format("[shape=\"box\", style=\"filled\",fillcolor={}, label={}] \n", buffer->imported ? style.color.resource.imported : style.color.resource.transient, label);
-				declared_buffers.insert(decl_pair);
-			}
-		};
-		auto DeclareTexture = [&declared_textures, &graphviz, this](RGTexture* texture)
-		{
-			auto decl_pair = std::make_pair(texture->id, texture->version);
-			if (!declared_textures.contains(decl_pair))
-			{
-				std::string dimensions;
-				switch (texture->desc.type)
+				auto decl_pair = std::make_pair(buffer->id, buffer->version);
+				if (!declared_buffers.contains(decl_pair))
 				{
-				case GfxTextureType_1D:  dimensions += std::format("width = {}", texture->desc.width); break;
-				case GfxTextureType_2D:  dimensions += std::format("width = {}, height = {}", texture->desc.width, texture->desc.height); break;
-				case GfxTextureType_3D:  dimensions += std::format("width = {}, height = {}, depth = {}", texture->desc.width, texture->desc.height, texture->desc.depth); break;
+					buffer->desc.size;
+					graphviz.declarations += std::format("B{}_{} ", buffer->id, buffer->version);
+					std::string label = std::format("<{}<br/>dimension: Buffer<br/>size: {} bytes <br/>format: {} <br/>version: {} <br/>refs: {}<br/>{}>",
+						buffer->name, buffer->desc.size, GfxFormatToString(buffer->desc.format), buffer->version, buffer->ref_count, buffer->imported ? "Imported" : "Transient");
+					graphviz.declarations += std::format("[shape=\"box\", style=\"filled\",fillcolor={}, label={}] \n", buffer->imported ? style.color.resource.imported : style.color.resource.transient, label);
+					declared_buffers.insert(decl_pair);
 				}
+			};
+		auto DeclareTexture = [&declared_textures, &graphviz, this](RGTexture* texture)
+			{
+				auto decl_pair = std::make_pair(texture->id, texture->version);
+				if (!declared_textures.contains(decl_pair))
+				{
+					std::string dimensions;
+					switch (texture->desc.type)
+					{
+					case GfxTextureType_1D:  dimensions += std::format("width = {}", texture->desc.width); break;
+					case GfxTextureType_2D:  dimensions += std::format("width = {}, height = {}", texture->desc.width, texture->desc.height); break;
+					case GfxTextureType_3D:  dimensions += std::format("width = {}, height = {}, depth = {}", texture->desc.width, texture->desc.height, texture->desc.depth); break;
+					}
 
-				if (texture->desc.array_size > 1)  dimensions += std::format(", array size = {}", texture->desc.array_size);
-				
-				graphviz.declarations += std::format("T{}_{} ", texture->id, texture->version);
-				std::string label = std::format("<{} <br/>dimension: {}<br/>{}<br/>format: {} <br/>version: {} <br/>refs: {}<br/>{}>", 
-					texture->name, GfxTextureTypeToString(texture->desc.type), dimensions, GfxFormatToString(texture->desc.format), texture->version, texture->ref_count, texture->imported ? "Imported" : "Transient");
-				graphviz.declarations += std::format("[shape=\"box\", style=\"filled\",fillcolor={}, label={}] \n", texture->imported ? style.color.resource.imported : style.color.resource.transient, label);
-				declared_textures.insert(decl_pair);
-			}
-		};
+					if (texture->desc.array_size > 1)  dimensions += std::format(", array size = {}", texture->desc.array_size);
+
+					graphviz.declarations += std::format("T{}_{} ", texture->id, texture->version);
+					std::string label = std::format("<{} <br/>dimension: {}<br/>{}<br/>format: {} <br/>version: {} <br/>refs: {}<br/>{}>",
+						texture->name, GfxTextureTypeToString(texture->desc.type), dimensions, GfxFormatToString(texture->desc.format), texture->version, texture->ref_count, texture->imported ? "Imported" : "Transient");
+					graphviz.declarations += std::format("[shape=\"box\", style=\"filled\",fillcolor={}, label={}] \n", texture->imported ? style.color.resource.imported : style.color.resource.transient, label);
+					declared_textures.insert(decl_pair);
+				}
+			};
 
 		for (auto const& dependency_level : dependency_levels)
 		{
@@ -1215,9 +1483,9 @@ namespace adria
 				graphviz.declarations += std::format("P{} ", pass->id);
 				std::string label = std::format("<{}<br/> type: {}<br/> refs: {}<br/> culled: {}>", pass->name, RGPassTypeToString(pass->type), pass->ref_count, pass->IsCulled() ? "Yes" : "No");
 				graphviz.declarations += std::format("[shape=\"ellipse\", style=\"rounded,filled\",fillcolor={}, label={}] \n",
-					                                  pass->IsCulled() ?  style.color.pass.culled : style.color.pass.executed, label);
+					pass->IsCulled() ? style.color.pass.culled : style.color.pass.executed, label);
 
-				std::string read_dependencies = "{"; 
+				std::string read_dependencies = "{";
 				std::string write_dependencies = "{";
 
 				for (auto const& buffer_read : pass->buffer_reads)
@@ -1233,7 +1501,7 @@ namespace adria
 					DeclareTexture(texture);
 					read_dependencies += std::format("T{}_{},", texture->id, texture->version);
 				}
-				
+
 				for (auto const& buffer_write : pass->buffer_writes)
 				{
 					RGBuffer* buffer = GetRGBuffer(buffer_write);
@@ -1250,7 +1518,7 @@ namespace adria
 					write_dependencies += std::format("T{}_{},", texture->id, texture->version);
 				}
 
-				if (read_dependencies.back() == ',') read_dependencies.pop_back(); 
+				if (read_dependencies.back() == ',') read_dependencies.pop_back();
 				read_dependencies += "}";
 				if (write_dependencies.back() == ',') write_dependencies.pop_back();
 				write_dependencies += "}";
@@ -1307,7 +1575,7 @@ namespace adria
 		render_graph_data += "\nTopologically sorted passes: \n";
 		for (Uint64 i = 0; i < topologically_sorted_passes.size(); ++i)
 		{
-			auto& topologically_sorted_pass = topologically_sorted_passes[i];
+			Uint64& topologically_sorted_pass = topologically_sorted_passes[i];
 			render_graph_data += std::format("{}. : {}\n", i, passes[topologically_sorted_pass]->name);
 		}
 
@@ -1316,7 +1584,7 @@ namespace adria
 		{
 			auto& level = dependency_levels[i];
 			render_graph_data += std::format("Dependency level {}: \n", i);
-			for(auto pass : level.passes) render_graph_data += std::format("{}\n", pass->name);
+			for (auto pass : level.passes) render_graph_data += std::format("{}\n", pass->name);
 			render_graph_data += "\nTexture usage:\n";
 			for (auto [tex_id, state] : level.texture_state_map)
 			{
@@ -1343,7 +1611,6 @@ namespace adria
 		}
 		ADRIA_LOG(DEBUG, "[RenderGraph]\n%s", render_graph_data.c_str());
 	}
-
 }
 
  

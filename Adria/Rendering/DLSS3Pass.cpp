@@ -7,13 +7,9 @@
 #include "RenderGraph/RenderGraph.h"
 #include "Editor/GUICommand.h"
 #include "Core/ConsoleManager.h"
-#include "Logging/Logger.h"
-
 
 namespace adria
 {
-	static TAutoConsoleVariable<Bool> DLSS3("r.DLSS3", true, "Enable or Disable DLSS3");
-
 	static constexpr Char const* project_guid = "a0f57b54-1daf-4934-90ae-c4035c19df04";
 	namespace
 	{
@@ -43,7 +39,11 @@ namespace adria
 
 	RGResourceName DLSS3Pass::AddPass(RenderGraph& rg, RGResourceName input)
 	{
-		if(!IsSupported()) ADRIA_ASSERT_MSG(false, "DLSS is not supported on this device");
+		if (!IsSupported())
+		{
+			ADRIA_ASSERT_MSG(false, "DLSS is not supported on this device");
+			return RGResourceName{};
+		}
 
 		FrameBlackboardData const& frame_data = rg.GetBlackboard().Get<FrameBlackboardData>();
 
@@ -176,7 +176,7 @@ namespace adria
 
 	Bool DLSS3Pass::IsEnabled(PostProcessor const*) const
 	{
-		return DLSS3.Get();
+		return true;
 	}
 
 	void DLSS3Pass::GUI()
@@ -185,14 +185,10 @@ namespace adria
 			{
 				if (ImGui::TreeNodeEx(name_version, ImGuiTreeNodeFlags_None))
 				{
-					ImGui::Checkbox("Enable", DLSS3.GetPtr());
-					if (DLSS3.Get())
+					if (ImGui::Combo("Performance Quality", (Int*)&perf_quality, "Max Performance\0Balanced\0Max Quality\0Ultra Performance\0", 4))
 					{
-						if (ImGui::Combo("Performance Quality", (int*)&perf_quality, "Max Performance\0Balanced\0Max Quality\0Ultra Performance\0UltraQuality\0", 5))
-						{
-							RecreateRenderResolution();
-							needs_create = true;
-						}
+						RecreateRenderResolution();
+						needs_create = true;
 					}
 					ImGui::TreePop();
 				}

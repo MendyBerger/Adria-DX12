@@ -16,9 +16,12 @@ namespace adria
 	{
 		CreatePSO();
 	}
+	HBAOPass::~HBAOPass() = default;
 
 	void HBAOPass::AddPass(RenderGraph& rendergraph)
 	{
+		RG_SCOPE(rendergraph, "HBAO");
+
 		struct HBAOPassData
 		{
 			RGTextureReadOnlyId gbuffer_normal_srv;
@@ -78,7 +81,7 @@ namespace adria
 				cmd_list->SetRootCBV(0, frame_data.frame_cbuffer_address);
 				cmd_list->SetRootConstants(1, constants);
 				cmd_list->Dispatch(DivideAndRoundUp(width, 16), DivideAndRoundUp(height, 16), 1);
-			}, RGPassType::Compute);
+			}, RGPassType::AsyncCompute);
 
 		blur_pass.AddPass(rendergraph, RG_NAME(HBAO_Output), RG_NAME(AmbientOcclusion), " HBAO");
 	}

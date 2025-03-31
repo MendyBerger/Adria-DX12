@@ -7,12 +7,9 @@
 #include "RenderGraph/RenderGraph.h"
 #include "Editor/GUICommand.h"
 #include "Core/ConsoleManager.h"
-#include "Logging/Logger.h"
 
 namespace adria
 {
-	static TAutoConsoleVariable<Bool> FSR3("r.FSR3", true, "Enable or Disable FSR3");
-
 	namespace
 	{
 		void FSR3Log(FfxMsgType type, Wchar const* message)
@@ -124,7 +121,7 @@ namespace adria
 
 	Bool FSR3Pass::IsEnabled(PostProcessor const*) const
 	{
-		return FSR3.Get();
+		return true; 
 	}
 
 	void FSR3Pass::GUI()
@@ -133,25 +130,24 @@ namespace adria
 			{
 				if (ImGui::TreeNodeEx(name_version, ImGuiTreeNodeFlags_None))
 				{
-					ImGui::Checkbox("Enable", FSR3.GetPtr());
-					if (FSR3.Get())
+					if (ImGui::Combo("Quality Mode", (Int32*)&fsr3_quality_mode, "Custom\0Quality (1.5x)\0Balanced (1.7x)\0Performance (2.0x)\0Ultra Performance (3.0x)\0", 5))
 					{
-						if (ImGui::Combo("Quality Mode", (Int32*)&fsr3_quality_mode, "Custom\0Quality (1.5x)\0Balanced (1.7x)\0Performance (2.0x)\0Ultra Performance (3.0x)\0", 5))
+						RecreateRenderResolution();
+						recreate_context = true;
+					}
+
+					if (fsr3_quality_mode == 0)
+					{
+						if (ImGui::SliderFloat("Upscale Ratio", &custom_upscale_ratio, 1.0, 3.0))
 						{
 							RecreateRenderResolution();
 							recreate_context = true;
 						}
-
-						if (fsr3_quality_mode == 0)
-						{
-							if (ImGui::SliderFloat("Upscale Ratio", &custom_upscale_ratio, 1.0, 3.0))
-							{
-								RecreateRenderResolution();
-								recreate_context = true;
-							}
-						}
-						ImGui::Checkbox("Enable sharpening", &sharpening_enabled);
-						if (sharpening_enabled) ImGui::SliderFloat("Sharpness", &sharpness, 0.0f, 1.0f, "%.2f");
+					}
+					ImGui::Checkbox("Enable sharpening", &sharpening_enabled);
+					if (sharpening_enabled)
+					{
+						ImGui::SliderFloat("Sharpness", &sharpness, 0.0f, 1.0f, "%.2f");
 					}
 					ImGui::TreePop();
 				}

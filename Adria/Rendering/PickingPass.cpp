@@ -5,7 +5,6 @@
 #include "Graphics/GfxBuffer.h"
 #include "Graphics/GfxPipelineState.h"
 #include "RenderGraph/RenderGraph.h"
-#include "Logging/Logger.h"
 
 namespace adria
 {
@@ -24,6 +23,8 @@ namespace adria
 
 	void PickingPass::AddPass(RenderGraph& rg)
 	{
+		RG_SCOPE(rg, "Picking");
+
 		FrameBlackboardData const& frame_data = rg.GetBlackboard().Get<FrameBlackboardData>();
 
 		struct PickingPassDispatchData

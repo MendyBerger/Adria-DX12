@@ -5,7 +5,6 @@
 #define BLUE_NOISE_TEXTURE_SIZE 128
 #define VOXEL_GRID_SIZE_Z		128
 
-
 struct CSInput
 {
 	uint3 GroupId : SV_GroupID;
@@ -107,22 +106,21 @@ void LightInjectionCS(CSInput input)
 
 	if(any(inScattering > 0.0f))
 	{
-		StructuredBuffer<Light> lights	= ResourceDescriptorHeap[FrameCB.lightsIdx];
 		for (int i = 0; i < FrameCB.lightCount; ++i)
 		{
-			Light light = lights[i];
-			if (!light.active || !light.volumetric) continue;
+			LightInfo lightInfo = LoadLightInfo(i);
+			if (!lightInfo.active || !lightInfo.volumetric) continue;
 
 			float3 L;
-			float attenuation = GetLightAttenuation(light, worldPosition, L);
+			float attenuation = GetLightAttenuation(lightInfo, worldPosition, L);
 			if(attenuation <= 0.0f) continue;
 
-			float shadowFactor = GetShadowMapFactorWS(light, worldPosition);
+			float shadowFactor = GetShadowMapFactorWS<false>(lightInfo, worldPosition);
 			attenuation *= shadowFactor;
 			if(attenuation <= 0.0f) continue;
 
 			float VdotL = dot(viewDirection, L);
-			totalLighting += attenuation * light.color.rgb * saturate(HenyeyGreensteinPhase(VdotL, 0.3f));
+			totalLighting += attenuation * lightInfo.color.rgb * saturate(HenyeyGreensteinPhase(VdotL, 0.3f));
 		}
 	}
 
@@ -154,7 +152,7 @@ struct ScatteringIntegrationConstants
 };
 ConstantBuffer<ScatteringIntegrationConstants> ScatteringIntegrationPassCB : register(b1);
 
-[numthreads(8, 8, 8)]
+[numthreads(8, 8, 1)]
 void ScatteringIntegrationCS(CSInput input)
 {
 	Texture3D<float4> lightInjectionTarget = ResourceDescriptorHeap[ScatteringIntegrationPassCB.lightInjectionTargetIdx];
@@ -164,6 +162,7 @@ void ScatteringIntegrationCS(CSInput input)
 	float  accumulatedTransmittance = 1.0f;
 	float3 prevWorldPosition = FrameCB.cameraPosition.xyz;
 	
+	[unroll(VOXEL_GRID_SIZE_Z)]
 	for (int z = 0; z < VOXEL_GRID_SIZE_Z; ++z)
 	{
 		uint3  voxelGridCoords = uint3(input.DispatchThreadId.xy, z);

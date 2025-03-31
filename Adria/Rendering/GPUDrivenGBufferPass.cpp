@@ -3,11 +3,10 @@
 #include "Components.h"
 #include "BlackboardData.h"
 #include "ShaderManager.h"
-#include "RendererOutputPass.h"
+#include "RendererDebugViewPass.h"
 #include "RenderGraph/RenderGraph.h"
 #include "Graphics/GfxPipelineStatePermutations.h"
 #include "entt/entity/registry.hpp"
-#include "Logging/Logger.h"
 #include "Editor/GUICommand.h"
 #include "Core/ConsoleManager.h"
 
@@ -52,16 +51,18 @@ namespace adria
 		return GpuDrivenRendering.Get();
 	}
 
-	void GPUDrivenGBufferPass::OnRendererOutputChanged(RendererOutput renderer_output)
+	void GPUDrivenGBufferPass::OnDebugViewChanged(RendererDebugView renderer_output)
 	{
-		debug_mipmaps = (renderer_output == RendererOutput::ViewMipMaps);
-		triangle_overdraw = (renderer_output == RendererOutput::TriangleOverdraw);
+		debug_mipmaps = (renderer_output == RendererDebugView::ViewMipMaps);
+		triangle_overdraw = (renderer_output == RendererDebugView::TriangleOverdraw);
+		material_ids = (renderer_output == RendererDebugView::MaterialID);
+		meshlet_ids = (renderer_output == RendererDebugView::MeshletID);
 	}
 
 	void GPUDrivenGBufferPass::AddPasses(RenderGraph& rg)
 	{
 		if (!IsSupported()) return;
-
+		RG_SCOPE(rg, "GBuffer - Meshlets");
 		AddClearCountersPass(rg);
 		Add1stPhasePasses(rg);
 		Add2ndPhasePasses(rg);
@@ -339,10 +340,8 @@ namespace adria
 					.candidate_meshlets_counter_idx = i + 4,
 				};
 
-				if (!occlusion_culling)
-				{
-					cull_instances_psos->AddDefine("OCCLUSION_CULL", "0");
-				}
+				cull_instances_psos->AddDefine("SKIP_ALPHA_BLENDED", skip_alpha_blended ? "1" : "0");
+				cull_instances_psos->AddDefine("OCCLUSION_CULL", occlusion_culling ? "1" : "0");
 				GfxPipelineState* pso = cull_instances_psos->Get();
 				cmd_list->SetPipelineState(pso);
 				cmd_list->SetRootCBV(0, frame_data.frame_cbuffer_address);
@@ -453,10 +452,7 @@ namespace adria
 					.visible_meshlets_counter_idx = i + 4,
 				};
 
-				if (!occlusion_culling)
-				{
-					cull_meshlets_psos->AddDefine("OCCLUSION_CULL", "0");
-				}
+				cull_meshlets_psos->AddDefine("OCCLUSION_CULL", occlusion_culling ? "1" : "0");
 				GfxPipelineState* pso = cull_meshlets_psos->Get();
 				cmd_list->SetPipelineState(pso);
 				cmd_list->SetRootCBV(0, frame_data.frame_cbuffer_address);
@@ -568,9 +564,12 @@ namespace adria
 				GfxShadingRateInfo const& vrs = gfx->GetVRSInfo();
 				cmd_list->BeginVRS(vrs);
 
-				if (debug_mipmaps) draw_psos->AddDefine("VIEW_MIPMAPS", "1");
-				if (rain_active) draw_psos->AddDefine("RAIN", "1");
-				if (triangle_overdraw) draw_psos->AddDefine("TRIANGLE_OVERDRAW", "1");
+				draw_psos->AddDefine("VIEW_MIPMAPS", debug_mipmaps ? "1" : "0");
+				draw_psos->AddDefine("RAIN", rain_active ? "1" : "0");
+				draw_psos->AddDefine("TRIANGLE_OVERDRAW", triangle_overdraw ? "1" : "0");
+				draw_psos->AddDefine("MATERIAL_ID", material_ids ? "1" : "0");
+				draw_psos->AddDefine("MESHLET_ID", meshlet_ids ? "1" : "0");
+
 				GfxPipelineState* pso = draw_psos->Get();
 				cmd_list->SetPipelineState(pso);
 				cmd_list->SetRootCBV(0, frame_data.frame_cbuffer_address);
@@ -684,10 +683,8 @@ namespace adria
 				};
 
 				cull_instances_psos->AddDefine("SECOND_PHASE", "1");
-				if (!occlusion_culling)
-				{
-					cull_instances_psos->AddDefine("OCCLUSION_CULL", "0");
-				}
+				cull_instances_psos->AddDefine("SKIP_ALPHA_BLENDED", skip_alpha_blended ? "1" : "0");
+				cull_instances_psos->AddDefine("OCCLUSION_CULL", occlusion_culling ? "1" : "0");
 				cmd_list->SetPipelineState(cull_instances_psos->Get());
 				cmd_list->SetRootCBV(0, frame_data.frame_cbuffer_address);
 				cmd_list->SetRootConstants(1, constants);
@@ -785,10 +782,7 @@ namespace adria
 					.visible_meshlets_counter_idx = i + 4,
 				};
 
-				if (!occlusion_culling)
-				{
-					cull_meshlets_psos->AddDefine("OCCLUSION_CULL", "0");
-				}
+				cull_meshlets_psos->AddDefine("OCCLUSION_CULL", occlusion_culling ? "1" : "0");
 				cull_meshlets_psos->AddDefine("SECOND_PHASE", "1");
 				cmd_list->SetPipelineState(cull_meshlets_psos->Get());
 				cmd_list->SetRootCBV(0, frame_data.frame_cbuffer_address);
@@ -878,9 +872,12 @@ namespace adria
 				GfxShadingRateInfo const& vrs = gfx->GetVRSInfo();
 				cmd_list->BeginVRS(vrs);
 
-				if (debug_mipmaps) draw_psos->AddDefine("VIEW_MIPMAPS", "1");
-				if (rain_active) draw_psos->AddDefine("RAIN", "1");
-				if (triangle_overdraw) draw_psos->AddDefine("TRIANGLE_OVERDRAW", "1");
+				draw_psos->AddDefine("VIEW_MIPMAPS", debug_mipmaps ? "1" : "0");
+				draw_psos->AddDefine("RAIN", rain_active ? "1" : "0");
+				draw_psos->AddDefine("TRIANGLE_OVERDRAW", triangle_overdraw ? "1" : "0");
+				draw_psos->AddDefine("MATERIAL_ID", material_ids ? "1" : "0");
+				draw_psos->AddDefine("MESHLET_ID", meshlet_ids ? "1" : "0");
+
 				GfxPipelineState* pso = draw_psos->Get();
 				cmd_list->SetPipelineState(pso);
 				cmd_list->SetRootCBV(0, frame_data.frame_cbuffer_address);

@@ -1,8 +1,5 @@
 #pragma once
-#include "SSAOPass.h"
-#include "HBAOPass.h"
-#include "RayTracedAmbientOcclusionPass.h"
-#include "FFXCACAOPass.h"
+#include "AmbientOcclusionManager.h"
 #include "Utilities/Delegate.h"
 #include "entt/entity/entity.hpp"
 
@@ -55,6 +52,7 @@ namespace adria
 
 		void AddAmbientOcclusionPass(RenderGraph& rg);
 		void AddPasses(RenderGraph& rg);
+		void AddMotionVectorsPass(RenderGraph& rg);
 		void AddTonemapPass(RenderGraph& rg, RGResourceName input);
 		void AddRenderResolutionChangedCallback(RenderResolutionChangedDelegate delegate);
 		void GUI();
@@ -64,7 +62,7 @@ namespace adria
 		void OnRenderResolutionChanged(Uint32 w, Uint32 h);
 		void OnSceneInitialized();
 
-		Bool NeedsJitter() const { return HasTAA() || HasUpscaler(); }
+		Bool NeedsJitter() const;
 		Bool NeedsVelocityBuffer() const;
 		Bool NeedsHistoryBuffer() const;
 		Bool HasUpscaler() const;
@@ -91,11 +89,7 @@ namespace adria
 
 		RGResourceName final_resource;
 
-		SSAOPass	 ssao_pass;
-		HBAOPass     hbao_pass;
-		FFXCACAOPass cacao_pass;
-		RayTracedAmbientOcclusionPass rtao_pass;
-
+		AmbientOcclusionManager ambient_occlusion_manager;
 		std::array<std::unique_ptr<PostEffect>, PostEffectType_Count> post_effects;
 		std::unique_ptr<GfxTexture> history_buffer;
 		std::unique_ptr<GfxTexture> depth_history;

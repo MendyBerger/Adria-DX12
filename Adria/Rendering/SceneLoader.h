@@ -4,6 +4,7 @@
 #include <vector>
 #include <string>
 #include "Components.h"
+#include "Meshlet.h"
 #include "Math/NormalsUtil.h"
 #include "Utilities/Heightmap.h"
 #include "entt/entity/registry.hpp"
@@ -49,7 +50,6 @@ namespace adria
 	{
 		GridParameters ocean_grid;
 	};
-
     struct LightParameters
     {
         Light light_data;
@@ -69,12 +69,27 @@ namespace adria
 		Vector3 normal;
 	};
 
+	struct MeshData
+	{
+		DirectX::BoundingBox bounding_box;
+		Int32 material_index = -1;
+		GfxPrimitiveTopology topology = GfxPrimitiveTopology::TriangleList;
+
+		std::vector<Vector3>		 positions_stream;
+		std::vector<Vector3>		 normals_stream;
+		std::vector<Vector4>		 tangents_stream;
+		std::vector<Vector2>		 uvs_stream;
+		std::vector<Uint32>			 indices;
+
+		std::vector<Meshlet>		 meshlets;
+		std::vector<Uint32>			 meshlet_vertices;
+		std::vector<MeshletTriangle> meshlet_triangles;
+	};
+
     class GfxDevice;
  
 	class SceneLoader
 	{
-		ADRIA_NODISCARD std::vector<entt::entity> LoadGrid(GridParameters const&);
-		ADRIA_NODISCARD std::vector<entt::entity> LoadObjMesh(std::string const&);
 	public:
         
         SceneLoader(entt::registry& reg, GfxDevice* device);
@@ -84,10 +99,16 @@ namespace adria
         ADRIA_MAYBE_UNUSED entt::entity LoadLight(LightParameters const&);
 		ADRIA_MAYBE_UNUSED std::vector<entt::entity> LoadOcean(OceanParameters const&);
 		ADRIA_MAYBE_UNUSED entt::entity LoadDecal(DecalParameters const&);
-		ADRIA_MAYBE_UNUSED entt::entity LoadModel_GLTF(ModelParameters const&);
+		ADRIA_MAYBE_UNUSED entt::entity LoadModel(ModelParameters const&);
 	private:
         entt::registry& reg;
         GfxDevice* gfx;
+
+	private:
+		ADRIA_NODISCARD std::vector<entt::entity> LoadGrid(GridParameters const&);
+		ADRIA_MAYBE_UNUSED entt::entity LoadModel_GLTF(ModelParameters const&);
+		ADRIA_MAYBE_UNUSED entt::entity LoadModel_OBJ(ModelParameters const&);
+		ADRIA_NODISCARD Uint64 CalculateTotalBufferSize(std::vector<MeshData>& mesh_data);
 	};
 }
 

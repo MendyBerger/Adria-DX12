@@ -7,10 +7,14 @@
 #include "GfxPipelineState.h"
 #include "GfxRenderPass.h"
 #include "GfxCommandSignature.h"
+#include "GfxScopedEvent.h"
 #include "GfxRingDescriptorAllocator.h"
 #include "GfxLinearDynamicAllocator.h"
 #include "GfxRayTracingShaderTable.h"
 #include "GfxStateObject.h"
+#include "GfxProfiler.h"
+#include "GfxNsightPerfManager.h"
+#include "pix3.h"
 #include "Utilities/StringUtil.h"
 
 namespace adria
@@ -204,7 +208,7 @@ namespace adria
 
 		if (type == GfxCommandListType::Graphics || type == GfxCommandListType::Compute)
 		{
-			auto* descriptor_allocator = gfx->GetDescriptorAllocator();
+			GfxOnlineDescriptorAllocator* descriptor_allocator = gfx->GetDescriptorAllocator();
 			if (descriptor_allocator)
 			{
 				ID3D12DescriptorHeap* heaps[] = { descriptor_allocator->GetHeap() };
@@ -212,9 +216,56 @@ namespace adria
 
 				ID3D12RootSignature* common_rs = gfx->GetCommonRootSignature();
 				cmd_list->SetComputeRootSignature(common_rs);
-				if (type == GfxCommandListType::Graphics) cmd_list->SetGraphicsRootSignature(common_rs);
+				if (type == GfxCommandListType::Graphics)
+				{
+					cmd_list->SetGraphicsRootSignature(common_rs);
+				}
 			}
 		}
+	}
+
+	void GfxCommandList::SetHeap(GfxOnlineDescriptorAllocator* heap)
+	{
+		if (heap && (type == GfxCommandListType::Graphics || type == GfxCommandListType::Compute))
+		{
+			ID3D12DescriptorHeap* heaps[] = { heap->GetHeap() };
+			cmd_list->SetDescriptorHeaps(1, heaps);
+		}
+	}
+
+	void GfxCommandList::ResetHeap()
+	{
+		GfxOnlineDescriptorAllocator* default_heap = gfx->GetDescriptorAllocator();
+		if (default_heap && (type == GfxCommandListType::Graphics || type == GfxCommandListType::Compute))
+		{
+			ID3D12DescriptorHeap* heaps[] = { default_heap->GetHeap() };
+			cmd_list->SetDescriptorHeaps(1, heaps);
+		}
+	}
+
+	void GfxCommandList::BeginEvent(Char const* event_name)
+	{
+		BeginEvent(event_name, GfxEventColor(0xf0, 0x00, 0xff));
+	}
+
+	void GfxCommandList::BeginEvent(Char const* event_name, Uint32 event_color)
+	{
+		PIXBeginEvent(cmd_list.Get(), event_color, event_name);
+		g_GfxProfiler.BeginProfileScope(this, event_name);
+		if (GfxNsightPerfManager* nsight_perf_manager = gfx->GetNsightPerfManager())
+		{
+			nsight_perf_manager->PushRange(this, event_name);
+		}
+	}
+
+	void GfxCommandList::EndEvent()
+	{
+		if (GfxNsightPerfManager* nsight_perf_manager = gfx->GetNsightPerfManager())
+		{
+			nsight_perf_manager->PopRange(this);
+		}
+		g_GfxProfiler.EndProfileScope(this);
+		PIXEndEvent(cmd_list.Get());
 	}
 
 	void GfxCommandList::BeginQuery(GfxQueryHeap& query_heap, Uint32 index)
@@ -234,30 +285,34 @@ namespace adria
 		cmd_list->ResolveQueryData(query_heap, ToD3D12QueryType(query_heap.GetDesc().type), start, count, dst_buffer.GetNative(), dst_offset);
 	}
 
-	void GfxCommandList::Draw(Uint32 vertex_count, Uint32 instance_count /*= 1*/, Uint32 start_vertex_location /*= 0*/, Uint32 start_instance_location /*= 0*/)
+	void GfxCommandList::Draw(Uint32 vertex_count, Uint32 instance_count, Uint32 start_vertex_location, Uint32 start_instance_location)
 	{
 		ADRIA_ASSERT(current_context == Context::Graphics);
+		if (vertex_count == 0 || instance_count == 0) return;
 		cmd_list->DrawInstanced(vertex_count, instance_count, start_vertex_location, start_instance_location);
 		++command_count;
 	}
 
-	void GfxCommandList::DrawIndexed(Uint32 index_count, Uint32 instance_count /*= 1*/, Uint32 index_offset /*= 0*/, Uint32 base_vertex_location /*= 0*/, Uint32 start_instance_location /*= 0*/)
+	void GfxCommandList::DrawIndexed(Uint32 index_count, Uint32 instance_count, Uint32 index_offset, Uint32 base_vertex_location, Uint32 start_instance_location)
 	{
 		ADRIA_ASSERT(current_context == Context::Graphics);
+		if (index_count == 0 || instance_count == 0) return;
 		cmd_list->DrawIndexedInstanced(index_count, instance_count, index_offset, base_vertex_location, start_instance_location);
 		++command_count;
 	}
 
-	void GfxCommandList::Dispatch(Uint32 group_count_x, Uint32 group_count_y, Uint32 group_count_z /* = 1*/)
+	void GfxCommandList::Dispatch(Uint32 group_count_x, Uint32 group_count_y, Uint32 group_count_z)
 	{
 		ADRIA_ASSERT(current_context == Context::Compute);
+		if (group_count_x == 0 || group_count_y == 0 || group_count_z == 0) return;
 		cmd_list->Dispatch(group_count_x, group_count_y, group_count_z);
 		++command_count;
 	}
 
-	void GfxCommandList::DispatchMesh(Uint32 group_count_x, Uint32 group_count_y, Uint32 group_count_z /*= 1*/)
+	void GfxCommandList::DispatchMesh(Uint32 group_count_x, Uint32 group_count_y, Uint32 group_count_z)
 	{
 		ADRIA_ASSERT(current_context == Context::Graphics);
+		if (group_count_x == 0 || group_count_y == 0 || group_count_z == 0) return;
 		cmd_list->DispatchMesh(group_count_x, group_count_y, group_count_z);
 		++command_count;
 	}
@@ -290,8 +345,10 @@ namespace adria
 		++command_count;
 	}
 
-	void GfxCommandList::DispatchRays(Uint32 dispatch_width, Uint32 dispatch_height, Uint32 dispatch_depth /*= 1*/)
+	void GfxCommandList::DispatchRays(Uint32 dispatch_width, Uint32 dispatch_height, Uint32 dispatch_depth)
 	{
+		ADRIA_ASSERT(current_context == Context::Compute);
+		if (dispatch_width == 0 || dispatch_height == 0 || dispatch_depth == 0) return;
 		D3D12_DISPATCH_RAYS_DESC dispatch_desc{};
 		dispatch_desc.Width = dispatch_width;
 		dispatch_desc.Height = dispatch_height;
@@ -486,7 +543,6 @@ namespace adria
 	{
 		GfxTextureDesc const& desc = src.GetDesc();
 
-
 		D3D12_TEXTURE_COPY_LOCATION dst_texture;
 		dst_texture.pResource = dst.GetNative();
 		dst_texture.Type = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;
@@ -495,7 +551,7 @@ namespace adria
 		dst_texture.PlacedFootprint.Footprint.Depth = 1;
 		dst_texture.PlacedFootprint.Footprint.Height = desc.height;
 		dst_texture.PlacedFootprint.Footprint.Format = ConvertGfxFormat(desc.format);
-		dst_texture.PlacedFootprint.Footprint.RowPitch = (Uint32) GetRowPitch(desc.format, dst_texture.PlacedFootprint.Footprint.Width); // (uint32)Align(, D3D12_TEXTURE_DATA_PITCH_ALIGNMENT);
+		dst_texture.PlacedFootprint.Footprint.RowPitch = (Uint32)Align(GetRowPitch(desc.format, dst_texture.PlacedFootprint.Footprint.Width), D3D12_TEXTURE_DATA_PITCH_ALIGNMENT);
 
 		D3D12_TEXTURE_COPY_LOCATION src_texture;
 		src_texture.pResource = src.GetNative();
@@ -504,6 +560,33 @@ namespace adria
 
 		cmd_list->CopyTextureRegion(&dst_texture, (Uint32)dst_offset, 0, 0, &src_texture, nullptr);
 		++command_count;
+	}
+
+	void GfxCommandList::CopyBufferToTexture(GfxTexture& dst_texture, Uint32 mip_level, Uint32 array_slice, GfxBuffer const& src_buffer, Uint32 offset)
+	{
+		GfxTextureDesc const& desc = dst_texture.GetDesc();
+
+		Uint32 min_width = GetGfxFormatBlockSize(desc.format);
+		Uint32 min_height = GetGfxFormatBlockSize(desc.format);
+		Uint32 w = std::max(desc.width >> mip_level, min_width);
+		Uint32 h = std::max(desc.height >> mip_level, min_height);
+		Uint32 d = std::max(desc.depth >> mip_level, 1u);
+
+		D3D12_TEXTURE_COPY_LOCATION copy_dst{};
+		copy_dst.pResource = dst_texture.GetNative();
+		copy_dst.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
+		copy_dst.SubresourceIndex = mip_level + desc.mip_levels * array_slice; 
+
+		D3D12_TEXTURE_COPY_LOCATION copy_src = {};
+		copy_src.pResource = src_buffer.GetNative();
+		copy_src.Type = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;
+		copy_src.PlacedFootprint.Offset = offset;
+		copy_src.PlacedFootprint.Footprint.Format = ConvertGfxFormat(desc.format);
+		copy_src.PlacedFootprint.Footprint.Width = w;
+		copy_src.PlacedFootprint.Footprint.Height = h;
+		copy_src.PlacedFootprint.Footprint.Depth = d;
+		copy_src.PlacedFootprint.Footprint.RowPitch = dst_texture.GetRowPitch(mip_level);
+		cmd_list->CopyTextureRegion(&copy_dst, 0, 0, 0, &copy_src, nullptr);
 	}
 
 	void GfxCommandList::ClearUAV(GfxBuffer const& resource, GfxDescriptor uav, GfxDescriptor uav_cpu, const Float* clear_value)
@@ -680,7 +763,7 @@ namespace adria
 		}
 	}
 
-	void GfxCommandList::SetVertexBuffer(GfxVertexBufferView const& vertex_buffer_view, Uint32 start_slot /*= 0*/)
+	void GfxCommandList::SetVertexBuffer(GfxVertexBufferView const& vertex_buffer_view, Uint32 start_slot)
 	{
 		D3D12_VERTEX_BUFFER_VIEW vbv{};
 		vbv.BufferLocation = vertex_buffer_view.buffer_location;
@@ -689,7 +772,7 @@ namespace adria
 		cmd_list->IASetVertexBuffers(start_slot, 1, &vbv);
 	}
 
-	void GfxCommandList::SetVertexBuffers(std::span<GfxVertexBufferView const> vertex_buffer_views, Uint32 start_slot /*= 0*/)
+	void GfxCommandList::SetVertexBuffers(std::span<GfxVertexBufferView const> vertex_buffer_views, Uint32 start_slot)
 	{
 		ADRIA_ASSERT(current_context == Context::Graphics);
 
@@ -880,7 +963,7 @@ namespace adria
 		}
 	}
 
-	GfxDynamicAllocation GfxCommandList::AllocateTransient(Uint32 size, Uint32 align /*= 0*/)
+	GfxDynamicAllocation GfxCommandList::AllocateTransient(Uint32 size, Uint32 align)
 	{
 		return gfx->GetDynamicAllocator()->Allocate(size, align);
 	}
@@ -890,14 +973,14 @@ namespace adria
 		cmd_list->ClearRenderTargetView(rtv, clear_color, 0, nullptr);
 	}
 
-	void GfxCommandList::ClearDepth(GfxDescriptor dsv, Float depth /*= 1.0f*/, Uint8 stencil /*= 0*/, Bool clear_stencil /*= false*/)
+	void GfxCommandList::ClearDepth(GfxDescriptor dsv, Float depth, Uint8 stencil, Bool clear_stencil)
 	{
 		D3D12_CLEAR_FLAGS d3d12_clear_flags = D3D12_CLEAR_FLAG_DEPTH;
 		if (clear_stencil) d3d12_clear_flags |= D3D12_CLEAR_FLAG_STENCIL;
 		cmd_list->ClearDepthStencilView(dsv, d3d12_clear_flags, depth, stencil, 0, nullptr);
 	}
 
-	void GfxCommandList::SetRenderTargets(std::span<GfxDescriptor const> rtvs, GfxDescriptor const* dsv /*= nullptr*/, Bool single_rt /*= false*/)
+	void GfxCommandList::SetRenderTargets(std::span<GfxDescriptor const> rtvs, GfxDescriptor const* dsv, Bool single_rt)
 	{
 		D3D12_CPU_DESCRIPTOR_HANDLE* d3d12_dsv = nullptr;
 		if (dsv)

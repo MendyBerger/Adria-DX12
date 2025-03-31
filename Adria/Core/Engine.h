@@ -6,7 +6,7 @@
 
 namespace adria
 {
-	struct WindowEventData;
+	struct WindowEventInfo;
 	class Window;
 	struct SceneConfig;
 	class GfxDevice;
@@ -25,8 +25,11 @@ namespace adria
 		ADRIA_NONCOPYABLE_NONMOVABLE(Engine)
 		~Engine();
 
-		void OnWindowEvent(WindowEventData const& msg_data);
 		void Run(MyPluginRuntime* p_runtime, MyWasmModuleId* module_id, MyPluginRuntimeRender*  pr_render);
+		void OnWindowEvent(WindowEventInfo const& msg_data);
+
+		Renderer* GetRenderer()   const { return renderer.get(); }
+		GfxDevice* GetGfxDevice() const { return gfx.get(); }
 
 	private:
 		Window* window = nullptr;

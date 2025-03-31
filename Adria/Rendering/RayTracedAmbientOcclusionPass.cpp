@@ -28,6 +28,7 @@ namespace adria
 	void RayTracedAmbientOcclusionPass::AddPass(RenderGraph& rg)
 	{
 		if (!IsSupported()) return;
+		RG_SCOPE(rg, "RTAO");
 
 		FrameBlackboardData const& frame_data = rg.GetBlackboard().Get<FrameBlackboardData>();
 		struct RayTracedAmbientOcclusionPassData
@@ -174,7 +175,6 @@ namespace adria
 				if (ImGui::TreeNodeEx("RTAO", ImGuiTreeNodeFlags_None))
 				{
 					ImGui::SliderFloat("Radius", &params.radius, 1.0f, 32.0f);
-					ImGui::SliderFloat("Power (log2)", &params.power_log, -10.0f, 10.0f);
 					ImGui::SliderFloat("Power (log2)", &params.power_log, -10.0f, 10.0f);
 					ImGui::SliderFloat("Filter Distance Sigma", &params.filter_distance_sigma, 0.0f, 25.0f);
 					ImGui::SliderFloat("Filter Depth Sigma", &params.filter_depth_sigma, 0.0f, 1.0f);

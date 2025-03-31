@@ -5,7 +5,6 @@
 #include "GfxShader.h"
 #include "GfxDevice.h"
 #include "Rendering/ShaderManager.h"
-#include "Logging/Logger.h"
 #include "Core/Paths.h"
 #include "Utilities/Timer.h"
 
@@ -103,13 +102,13 @@ namespace adria
 
 	void GfxNsightAftermathGpuCrashTracker::OnCrashDump(const void* gpu_crash_dump_data, const Uint32 gpu_crash_dump_size)
 	{
-		std::lock_guard<std::mutex> lock(m_mutex);
+		std::lock_guard<std::mutex> lock(aftermath_mutex);
 		WriteGpuCrashDumpToFile(gpu_crash_dump_data, gpu_crash_dump_size);
 	}
 
 	void GfxNsightAftermathGpuCrashTracker::OnShaderDebugInfo(const void* shader_debug_info, const Uint32 shader_debug_info_size)
 	{
-		std::lock_guard<std::mutex> lock(m_mutex);
+		std::lock_guard<std::mutex> lock(aftermath_mutex);
 
 		GFSDK_Aftermath_ShaderDebugInfoIdentifier identifier{};
 		GFSDK_Aftermath_Result result = GFSDK_Aftermath_GetShaderDebugInfoIdentifier(

@@ -7,8 +7,8 @@
 #include "Core/Engine.h"
 #include "Core/Input.h"
 #include "Core/CommandLineOptions.h"
-#include "Logging/FileLogger.h"
-#include "Logging/OutputDebugStringLogger.h"
+#include "Core/Loggers/FileLogger.h"
+#include "Core/Loggers/OutputDebugStringLogger.h"
 #include "Editor/Editor.h"
 #include "Utilities/MemoryDebugger.h"
 #include "Utilities/CLIParser.h"
@@ -120,12 +120,12 @@ int APIENTRY wWinMain(
     g_Log.Register(new FileLogger(log_file.c_str(), log_level));
     g_Log.Register(new OutputDebugStringLogger(log_level));
 
-    std::string window_title = CommandLineOptions::GetWindowTitle();
     WindowInit window_init{};
     window_init.width = CommandLineOptions::GetWindowWidth();
     window_init.height = CommandLineOptions::GetWindowHeight();
-    window_init.title = window_title.c_str();
     window_init.maximize = CommandLineOptions::GetMaximizeWindow();
+	std::string window_title = CommandLineOptions::GetWindowTitle();
+	window_init.title = window_title.c_str();
     Window window(window_init);
     g_Input.Initialize(&window);
 
@@ -133,7 +133,7 @@ int APIENTRY wWinMain(
     IDXGIFactory6* factory6 = nullptr;
     factory->QueryInterface(IID_PPV_ARGS(&factory6));
     g_Editor.Init(std::move(editor_init), &runtime, &render);
-    window.GetWindowEvent().AddLambda([](WindowEventData const& msg_data) { g_Editor.OnWindowEvent(msg_data); });
+    window.GetWindowEvent().AddLambda([](WindowEventInfo const& msg_data) { g_Editor.OnWindowEvent(msg_data); });
     while (window.Loop())
     {
         std::this_thread::sleep_for(std::chrono::milliseconds(10));

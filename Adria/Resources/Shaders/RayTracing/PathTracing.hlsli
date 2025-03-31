@@ -8,12 +8,12 @@
 
 struct Reservoir
 {
-    bool UpdateReservoir(uint X, float w, float pdf, inout uint randSeed)
+    bool UpdateReservoir(uint X, float w, float pdf, float random)
     {
         totalWeight += w;
         M += 1;
  
-        if (NextRand(randSeed) < w / totalWeight)
+        if (random < w / totalWeight)
         {
             lightIndex = X;
             lightWeight = w;
@@ -36,15 +36,13 @@ struct Reservoir
     uint  M;                
 };
 
-void SampleSourceLight(in int lightCount, inout uint seed, out int lightIndex, out float sourcePdf)
+void SampleSourceLight(in int lightCount, inout RNG rng, out int lightIndex, out float sourcePdf)
 {
-    lightIndex = min(int(NextRand(seed) * lightCount), lightCount - 1);
+    lightIndex = min(int(RNG_GetNext(rng) * lightCount), lightCount - 1);
     sourcePdf = 1.0f / lightCount;
 }
-bool SampleLightRIS(inout uint seed, float3 position, float3 N, out int lightIndex, out float sampleWeight)
+bool SampleLightRIS(inout RNG rng, float3 position, float3 N, out int lightIndex, out float sampleWeight)
 {
-    StructuredBuffer<Light> lights = ResourceDescriptorHeap[FrameCB.lightsIdx];
-
     uint M = min(RIS_CANDIDATES_LIGHTS, FrameCB.lightCount);
     lightIndex = -1;
     sampleWeight = 0.0f;
@@ -54,27 +52,28 @@ bool SampleLightRIS(inout uint seed, float3 position, float3 N, out int lightInd
     {
         uint lightIndex = 0;
         float sourcePdf = 1.0f;
-        SampleSourceLight(FrameCB.lightCount, seed, lightIndex, sourcePdf);
+        SampleSourceLight(FrameCB.lightCount, rng, lightIndex, sourcePdf);
 
-        Light light = lights[lightIndex];
-        float3 positionDifference = light.position.xyz - position;
+        LightInfo lightInfo = LoadLightInfo(lightIndex); 
+        float3 positionDifference = lightInfo.position.xyz - position;
         float distance = length(positionDifference);
         float3 L = positionDifference / distance;
-        if (light.type == DIRECTIONAL_LIGHT)
+        if (lightInfo.type == DIRECTIONAL_LIGHT)
         {
-            L = -normalize(light.direction.xyz);
+            L = -normalize(lightInfo.direction.xyz);
         }
         if (dot(N, L) < 0.0f)
         {
             continue;
         }
-        float targetPdf = Luminance(DoAttenuation(distance, light.range) * light.color.rgb);
-        if (light.type == DIRECTIONAL_LIGHT)
+        float targetPdf = Luminance(DoAttenuation(distance, lightInfo.range) * lightInfo.color.rgb);
+        if (lightInfo.type == DIRECTIONAL_LIGHT)
         {
-            targetPdf = Luminance(light.color.rgb);
+            targetPdf = Luminance(lightInfo.color.rgb);
         }
         float risWeight = targetPdf / sourcePdf;
-        reservoir.UpdateReservoir(lightIndex, risWeight, targetPdf, seed);
+        
+        reservoir.UpdateReservoir(lightIndex, risWeight, targetPdf, RNG_GetNext(rng));
     }
 
     if (reservoir.totalWeight == 0.0f) return false;

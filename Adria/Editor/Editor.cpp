@@ -1,4 +1,4 @@
-#include <filesystem>
+﻿#include <filesystem>
 #include "nfd.h"
 #include "Editor.h"
 #include "ImGuiManager.h"
@@ -19,6 +19,7 @@
 #include "Graphics/GfxTexture.h"
 #include "Graphics/GfxRingDescriptorAllocator.h"
 #include "Graphics/GfxProfiler.h"
+#include "Graphics/GfxNsightPerfManager.h"
 #include "RenderGraph/RenderGraph.h"
 #include "Utilities/FilesUtil.h"
 #include "Utilities/StringUtil.h"
@@ -31,7 +32,7 @@ namespace fs = std::filesystem;
 
 namespace adria
 {
-	extern Bool dump_render_graph;
+	extern Bool g_DumpRenderGraph;
 
 	struct ProfilerState
 	{
@@ -76,11 +77,12 @@ namespace adria
 		engine.reset();
 		console.reset();
 	}
-	void Editor::OnWindowEvent(WindowEventData const& msg_data)
+	void Editor::OnWindowEvent(WindowEventInfo const& msg_data)
 	{
 		engine->OnWindowEvent(msg_data);
 		gui->OnWindowEvent(msg_data);
 	}
+
 	void Editor::Run(MyPluginRuntime*  p_runtime, MyWasmModuleId* module_id, MyPluginRuntimeRender*  pr_render)
 	{
 		HandleInput();
@@ -96,6 +98,12 @@ namespace adria
 			reload_shaders = false;
 		}
 	}
+
+	void Editor::EndFrame()
+	{
+		profiler_tree = g_GfxProfiler.GetProfilerTree();
+	}
+
 	Bool Editor::IsActive() const
 	{
 		return gui->IsVisible();
@@ -728,12 +736,12 @@ namespace adria
 			{
 				if (ImGui::BeginMenu("Lighting Path"))
 				{
-					LightingPathType current_path = engine->renderer->GetLightingPath();
-					auto AddMenuItem = [&](LightingPathType lighting_path, Char const* item_name)
+					LightingPath current_path = engine->renderer->GetLightingPath();
+					auto AddMenuItem = [&](LightingPath lighting_path, Char const* item_name)
 					{
 						if (ImGui::MenuItem(item_name, nullptr, lighting_path == current_path)) { engine->renderer->SetLightingPath(lighting_path); }
 					};
-					#define AddLightingPathMenuItem(name) AddMenuItem(LightingPathType::##name, #name)
+					#define AddLightingPathMenuItem(name) AddMenuItem(LightingPath::##name, #name)
 					AddLightingPathMenuItem(Deferred);
 					AddLightingPathMenuItem(TiledDeferred);
 					AddLightingPathMenuItem(ClusteredDeferred);
@@ -741,29 +749,32 @@ namespace adria
 					#undef AddLightingPathMenuItem
 					ImGui::EndMenu();
 				}
-				if (ImGui::BeginMenu("Renderer Output"))
+				if (ImGui::BeginMenu("Debug View"))
 				{
-					RendererOutput current_output = engine->renderer->GetRendererOutput();
-					auto AddMenuItem = [&](RendererOutput output, Char const* item_name)
+					RendererDebugView current_debug_view = engine->renderer->GetDebugView();
+					auto AddMenuItem = [&](RendererDebugView output, Char const* item_name)
 					{
-						if (ImGui::MenuItem(item_name, nullptr, output == current_output)) { engine->renderer->SetRendererOutput(output); }
+						if (ImGui::MenuItem(item_name, nullptr, output == current_debug_view)) { engine->renderer->SetDebugView(output); }
 					};
 
-					#define AddRendererOutputMenuItem(name) AddMenuItem(RendererOutput::##name, #name)
-					AddRendererOutputMenuItem(Final);
-					AddRendererOutputMenuItem(Diffuse);
-					AddRendererOutputMenuItem(WorldNormal);
-					AddRendererOutputMenuItem(Depth);
-					AddRendererOutputMenuItem(Roughness);
-					AddRendererOutputMenuItem(Metallic);
-					AddRendererOutputMenuItem(Emissive);
-					AddRendererOutputMenuItem(AmbientOcclusion);
-					AddRendererOutputMenuItem(IndirectLighting);
-					AddRendererOutputMenuItem(Custom);
-					AddRendererOutputMenuItem(ShadingExtension);
-					AddRendererOutputMenuItem(ViewMipMaps);
-					AddRendererOutputMenuItem(TriangleOverdraw);
-					#undef AddRendererOutputMenuItem
+					#define AddDebugViewMenuItem(name) AddMenuItem(RendererDebugView::##name, #name)
+					AddDebugViewMenuItem(Final);
+					AddDebugViewMenuItem(Diffuse);
+					AddDebugViewMenuItem(WorldNormal);
+					AddDebugViewMenuItem(Depth);
+					AddDebugViewMenuItem(Roughness);
+					AddDebugViewMenuItem(Metallic);
+					AddDebugViewMenuItem(Emissive);
+					AddDebugViewMenuItem(MaterialID);
+					AddDebugViewMenuItem(MeshletID);
+					AddDebugViewMenuItem(AmbientOcclusion);
+					AddDebugViewMenuItem(IndirectLighting);
+					AddDebugViewMenuItem(Custom);
+					AddDebugViewMenuItem(ShadingExtension);
+					AddDebugViewMenuItem(ViewMipMaps);
+					AddDebugViewMenuItem(TriangleOverdraw);
+					AddDebugViewMenuItem(MotionVectors);
+					#undef AddDebugViewMenuItem
 					ImGui::EndMenu();
 				}
 				ImGui::EndMenuBar();
@@ -865,7 +876,7 @@ namespace adria
 #if GFX_PROFILING_USE_TRACY
 			if (ImGui::Button("Run Tracy"))
 			{
-				system("start ..\\External\\tracy\\Tracy-0.9.1\\Tracy.exe");
+				system("start ..\\External\\tracy\\Tracy-0.11.1\\tracy-profiler.exe");
 			}
 #endif
 			static Bool show_profiling = true;
@@ -881,7 +892,6 @@ namespace adria
 				static Float FrameTimeGraphMaxValues[ARRAYSIZE(FRAME_TIME_GRAPH_MAX_FPS)] = { 0 };
 				for (Uint64 i = 0; i < ARRAYSIZE(FrameTimeGraphMaxValues); ++i) { FrameTimeGraphMaxValues[i] = 1000.f / FRAME_TIME_GRAPH_MAX_FPS[i]; }
 
-				std::vector<GfxTimestamp> time_stamps = g_GfxProfiler.GetResults();
 				FrameTimeArray[NUM_FRAMES - 1] = 1000.0f / io.Framerate;
 				for (Uint32 i = 0; i < NUM_FRAMES - 1; i++) FrameTimeArray[i] = FrameTimeArray[i + 1];
 				RecentHighestFrameTime = std::max(RecentHighestFrameTime, FrameTimeArray[NUM_FRAMES - 1]);
@@ -889,6 +899,8 @@ namespace adria
 				Float frame_time_ms = FrameTimeArray[NUM_FRAMES - 1];
 				Int32 const fps = static_cast<Int32>(1000.0f / frame_time_ms);
 				ImGui::Text("FPS        : %d (%.2f ms)", fps, frame_time_ms);
+#if GFX_PROFILING
+				Uint32 const profiler_tree_size = (Uint32)profiler_tree->Size();
 				if (ImGui::CollapsingHeader("Timings", ImGuiTreeNodeFlags_DefaultOpen))
 				{
 					ImGui::Checkbox("Show Avg/Min/Max", &state.show_average);
@@ -934,52 +946,137 @@ namespace adria
 						reset_accumulating_state = true;
 					}
 
-					reset_accumulating_state |= (state.accumulating_timestamps.size() != time_stamps.size());
+					reset_accumulating_state |= (state.accumulating_timestamps.size() != profiler_tree_size);
 					if (reset_accumulating_state)
 					{
 						state.accumulating_timestamps.resize(0);
-						state.accumulating_timestamps.resize(time_stamps.size());
+						state.accumulating_timestamps.resize(profiler_tree_size);
 						state.last_reset_time = current_time;
 						state.accumulating_frame_count = 0;
 					}
 
-					Float total_time_ms = 0.0f;
+					struct ProfilerNodeState 
+					{
+						std::unordered_map<std::string, Bool> open_states;
+						std::unordered_map<std::string, Uint64> node_ids;
+
+						void* GetNodeId(Char const* name)
+						{
+							static Uint64 id = 0;
+							if (!node_ids.contains(name))
+							{
+								node_ids[name] = id++;
+							}
+							return reinterpret_cast<void*>(node_ids[name]);
+						}
+
+						Bool IsNodeOpen(Char const* name) 
+						{
+							auto it = open_states.find(name);
+							return it == open_states.end() ? true : it->second;
+						}
+
+						void ToggleNodeState(Char const* name)
+						{
+							open_states[name] = !IsNodeOpen(name);
+						}
+					};
+					static ProfilerNodeState s_ProfilerNodeState;
+
 					ImGui::BeginTable("Profiler", 2, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_RowBg);
 					ImGui::TableSetupColumn("Pass");
 					ImGui::TableSetupColumn("Time");
-					for (Uint64 i = 0; i < time_stamps.size(); i++)
-					{
-						ImGui::TableNextRow();
+					ImGui::TableHeadersRow();
 
-						ImGui::TableSetColumnIndex(0);
-						ImGui::Text("%s", time_stamps[i].name.c_str());
-						ImGui::TableSetColumnIndex(1);
-						ImGui::Text("%.2f ms", time_stamps[i].time_in_ms);
-						
-						if (state.show_average)
+					std::unordered_map<GfxProfilerTreeNode*, Bool> visible_nodes;
+					profiler_tree->TraversePreOrder([&](GfxProfilerTreeNode* node)
 						{
-							if (state.displayed_timestamps.size() == time_stamps.size())
+							if (node->GetParent() == nullptr) 
 							{
-								ImGui::SameLine();
-								ImGui::Text("  avg: %.2f ms", state.displayed_timestamps[i].sum);
-								ImGui::SameLine();	 
-								ImGui::Text("  min: %.2f ms", state.displayed_timestamps[i].minimum);
-								ImGui::SameLine();	 
-								ImGui::Text("  max: %.2f ms", state.displayed_timestamps[i].maximum);
+								visible_nodes[node] = true;
+								return;
 							}
-						
-							ProfilerState::AccumulatedTimeStamp* accumulating_timestamp = &state.accumulating_timestamps[i];
-							accumulating_timestamp->sum += time_stamps[i].time_in_ms;
-							accumulating_timestamp->minimum = std::min<Float>(accumulating_timestamp->minimum, time_stamps[i].time_in_ms);
-							accumulating_timestamp->maximum = std::max<Float>(accumulating_timestamp->maximum, time_stamps[i].time_in_ms);
-						}
-						total_time_ms += time_stamps[i].time_in_ms;
-					}
+							GfxProfilerTreeNode* parent = node->GetParent();
+							Bool parent_visible = visible_nodes[parent];
+							Bool parent_expanded = s_ProfilerNodeState.IsNodeOpen(parent->GetName().data());
+							visible_nodes[node] = parent_visible && parent_expanded;
+						});
+
+					profiler_tree->TraversePreOrder([&](GfxProfilerTreeNode* node)
+						{
+							if (!visible_nodes[node]) 
+							{
+								return;
+							}
+							std::string_view node_name = node->GetName();
+							Float node_time = (Float)node->GetData().time;
+							Uint32 i = node->GetData().index;
+
+							Uint32 node_depth = node->GetDepth();
+							ImGui::TableNextRow();
+							ImGui::TableSetColumnIndex(0);
+
+							if (node_depth > 0) ImGui::Indent(node_depth * 16.0f);
+							Bool is_open = s_ProfilerNodeState.IsNodeOpen(node_name.data());
+
+							ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_FramePadding;
+							if (node->GetChildren().empty()) 
+							{
+								flags |= ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen;
+							}
+							if (is_open) 
+							{
+								flags |= ImGuiTreeNodeFlags_DefaultOpen;
+							}
+
+							void* node_id = s_ProfilerNodeState.GetNodeId(node_name.data());
+							ImGui::PushID(node_id);
+							Bool node_opened = ImGui::TreeNodeEx(node_name.data(), flags);
+							if (ImGui::IsItemClicked() && !node->GetChildren().empty())
+							{
+								s_ProfilerNodeState.ToggleNodeState(node_name.data());
+							}
+							ImGui::PopID();
+
+							ImGui::TableSetColumnIndex(1);
+							ImGui::Text("%.2f ms", node_time);
+							if (state.show_average) 
+							{
+								if (state.displayed_timestamps.size() == profiler_tree_size) {
+									ImGui::SameLine();
+									ImGui::Text("  avg: %.2f ms", state.displayed_timestamps[i].sum);
+									ImGui::SameLine();
+									ImGui::Text("  min: %.2f ms", state.displayed_timestamps[i].minimum);
+									ImGui::SameLine();
+									ImGui::Text("  max: %.2f ms", state.displayed_timestamps[i].maximum);
+								}
+								ProfilerState::AccumulatedTimeStamp* accumulating_timestamp = &state.accumulating_timestamps[i];
+								accumulating_timestamp->sum += node_time;
+								accumulating_timestamp->minimum = std::min<Float>(accumulating_timestamp->minimum, node_time);
+								accumulating_timestamp->maximum = std::max<Float>(accumulating_timestamp->maximum, node_time);
+							}
+							if (node_depth > 0) ImGui::Unindent(node_depth * 16.0f);
+							if (node_opened && !(flags & ImGuiTreeNodeFlags_NoTreePushOnOpen))
+							{
+								ImGui::TreePop();
+							}
+						});
 					ImGui::EndTable();
-					ImGui::Text("Total: %7.2f %s", total_time_ms, "ms");
 					state.accumulating_frame_count++;
 				}
+#endif
 			}
+#if defined(GFX_ENABLE_NV_PERF)
+			if (GfxNsightPerfManager* nsight_perf_manager = gfx->GetNsightPerfManager())
+			{
+				static Bool display_nsight_perf = false;
+				ImGui::Checkbox("Display subunit activity (Nsight Perf)", &display_nsight_perf);
+				if (display_nsight_perf)
+				{
+					nsight_perf_manager->Render();
+				}
+			}
+#endif
 			static Bool display_vram_usage = false;
 			ImGui::Checkbox("Display VRAM Usage", &display_vram_usage);
 			if (display_vram_usage)
@@ -1076,7 +1173,7 @@ namespace adria
 
 			if (ImGui::TreeNode("Render Graph"))
 			{
-				dump_render_graph = ImGui::Button("Dump render graph");
+				g_DumpRenderGraph = ImGui::Button("Dump render graph");
 				ImGui::TreePop();
 			}
 
@@ -1140,6 +1237,19 @@ namespace adria
 				}
 				ImGui::TreePop();
 			}
+
+			if (GfxNsightPerfManager* nsight_perf_manager = gfx->GetNsightPerfManager())
+			{
+				if (ImGui::TreeNode("Nsight Perf Report"))
+				{
+					if (ImGui::Button("Generate Report"))
+					{
+						nsight_perf_manager->GenerateReport();
+					}
+					ImGui::TreePop();
+				}
+			}
+			
 		}
 		ImGui::End();
 	}

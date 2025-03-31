@@ -4,7 +4,7 @@
 #include "Components.h"
 #include "BlackboardData.h"
 #include "ShaderManager.h"
-#include "RendererOutputPass.h"
+#include "RendererDebugViewPass.h"
 #include "Graphics/GfxReflection.h"
 #include "Graphics/GfxTracyProfiler.h"
 #include "Graphics/GfxPipelineStatePermutations.h"
@@ -58,37 +58,6 @@ namespace adria
 			},
 			[=](RenderGraphContext& context, GfxCommandList* cmd_list)
 			{
-				GfxDevice* gfx = cmd_list->GetDevice();
-				
-				cmd_list->SetRootCBV(0, frame_data.frame_cbuffer_address);
-				auto GetPSO = [this](ShadingExtension extension, MaterialAlphaMode alpha_mode)
-				{
-					using enum GfxShaderStage;
-					if (debug_mipmaps) gbuffer_psos->AddDefine<PS>("VIEW_MIPMAPS", "1");
-					if (raining) gbuffer_psos->AddDefine<PS>("RAIN", "1");
-					if (triangle_overdraw) gbuffer_psos->AddDefine<PS>("TRIANGLE_OVERDRAW", "1");
-
-					switch (extension)
-					{
-					case ShadingExtension::Anisotropy:	gbuffer_psos->AddDefine<PS>("SHADING_EXTENSION_ANISOTROPY", "1"); break;
-					case ShadingExtension::ClearCoat:	gbuffer_psos->AddDefine<PS>("SHADING_EXTENSION_CLEARCOAT", "1"); break;
-					case ShadingExtension::Sheen:		gbuffer_psos->AddDefine<PS>("SHADING_EXTENSION_SHEEN", "1"); break;
-					}
-
-					switch (alpha_mode)
-					{
-					case MaterialAlphaMode::Opaque: break;
-					case MaterialAlphaMode::Mask:   gbuffer_psos->AddDefine<PS>("MASK", "1"); break;
-					case MaterialAlphaMode::Blend:  gbuffer_psos->SetCullMode(GfxCullMode::None); break;
-					}
-					return gbuffer_psos->Get();
-				};
-
-				cmd_list->SetRootCBV(0, frame_data.frame_cbuffer_address);
-
-				GfxShadingRateInfo const& vrs = gfx->GetVRSInfo();
-				cmd_list->BeginVRS(vrs);
-
 				reg.sort<Batch>([&frame_data](Batch const& lhs, Batch const& rhs)
 					{ 
 						if(lhs.alpha_mode != rhs.alpha_mode) return lhs.alpha_mode < rhs.alpha_mode;
@@ -99,26 +68,13 @@ namespace adria
 						return lhs_distance < rhs_distance;
 					});
 
-				auto batch_view = reg.view<Batch>();
-				for (auto batch_entity : batch_view)
-				{
-					Batch& batch = batch_view.get<Batch>(batch_entity);
-					if (!batch.camera_visibility) continue;
+				cmd_list->SetRootCBV(0, frame_data.frame_cbuffer_address);
+				GfxDevice* gfx = cmd_list->GetDevice();
+				GfxShadingRateInfo const& vrs = gfx->GetVRSInfo();
+				cmd_list->BeginVRS(vrs);
 
-					GfxPipelineState* pso = GetPSO(batch.shading_extension, batch.alpha_mode);
-					cmd_list->SetPipelineState(pso);
-
-					struct GBufferConstants
-					{
-						Uint32 instance_id;
-					} constants { .instance_id = batch.instance_id };
-					cmd_list->SetRootConstants(1, constants);
-
-					GfxIndexBufferView ibv(batch.submesh->buffer_address + batch.submesh->indices_offset, batch.submesh->indices_count);
-					cmd_list->SetTopology(batch.submesh->topology);
-					cmd_list->SetIndexBuffer(&ibv);
-					cmd_list->DrawIndexed(batch.submesh->indices_count);
-				}
+				if (skip_alpha_blended) ProcessBatches(reg.view<Batch>(entt::exclude_t<Transparent>()), cmd_list);
+				else ProcessBatches(reg.view<Batch>(), cmd_list);
 
 				cmd_list->EndVRS(vrs);
 			}, RGPassType::Graphics, RGPassFlags::None);
@@ -129,10 +85,11 @@ namespace adria
 		width = w, height = h;
 	}
 
-	void GBufferPass::OnRendererOutputChanged(RendererOutput renderer_output)
+	void GBufferPass::OnDebugViewChanged(RendererDebugView renderer_output)
 	{
-		debug_mipmaps = (renderer_output == RendererOutput::ViewMipMaps);
-		triangle_overdraw = (renderer_output == RendererOutput::TriangleOverdraw);
+		debug_mipmaps = (renderer_output == RendererDebugView::ViewMipMaps);
+		triangle_overdraw = (renderer_output == RendererDebugView::TriangleOverdraw);
+		material_ids = (renderer_output == RendererDebugView::MaterialID);
 	}
 
 	void GBufferPass::CreatePSOs()
@@ -155,5 +112,52 @@ namespace adria
 		gbuffer_psos = std::make_unique<GfxGraphicsPipelineStatePermutations>(gfx, gbuffer_pso_desc);
 	}
 
+	template<typename View>
+	void GBufferPass::ProcessBatches(View view, GfxCommandList* cmd_list)
+	{
+		auto GetPSO = [this](ShadingExtension extension, MaterialAlphaMode alpha_mode)
+			{
+				using enum GfxShaderStage;
+				if (raining) gbuffer_psos->AddDefine<PS>("RAIN", "1");
+				if (debug_mipmaps) gbuffer_psos->AddDefine<PS>("VIEW_MIPMAPS", "1");
+				if (triangle_overdraw) gbuffer_psos->AddDefine<PS>("TRIANGLE_OVERDRAW", "1");
+				if (material_ids) gbuffer_psos->AddDefine<PS>("MATERIAL_ID", "1");
+
+				switch (extension)
+				{
+				case ShadingExtension::Anisotropy:	gbuffer_psos->AddDefine<PS>("SHADING_EXTENSION_ANISOTROPY", "1"); break;
+				case ShadingExtension::ClearCoat:	gbuffer_psos->AddDefine<PS>("SHADING_EXTENSION_CLEARCOAT", "1"); break;
+				case ShadingExtension::Sheen:		gbuffer_psos->AddDefine<PS>("SHADING_EXTENSION_SHEEN", "1"); break;
+				}
+
+				switch (alpha_mode)
+				{
+				case MaterialAlphaMode::Opaque: break;
+				case MaterialAlphaMode::Mask:   gbuffer_psos->AddDefine<PS>("MASK", "1"); break;
+				case MaterialAlphaMode::Blend:  gbuffer_psos->SetCullMode(GfxCullMode::None); break;
+				}
+				return gbuffer_psos->Get();
+			};
+
+		for (auto batch_entity : view)
+		{
+			Batch& batch = view.get<Batch>(batch_entity);
+			if (!batch.camera_visibility) continue;
+
+			GfxPipelineState* pso = GetPSO(batch.shading_extension, batch.alpha_mode);
+			cmd_list->SetPipelineState(pso);
+
+			struct GBufferConstants
+			{
+				Uint32 instance_id;
+			} constants{ .instance_id = batch.instance_id };
+			cmd_list->SetRootConstants(1, constants);
+
+			GfxIndexBufferView ibv(batch.submesh->buffer_address + batch.submesh->indices_offset, batch.submesh->indices_count);
+			cmd_list->SetTopology(batch.submesh->topology);
+			cmd_list->SetIndexBuffer(&ibv);
+			cmd_list->DrawIndexed(batch.submesh->indices_count);
+		}
+	}
 }
 

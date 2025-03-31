@@ -7,7 +7,7 @@ namespace adria
 	LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM w_param, LPARAM l_param)
 	{
 		Window* this_window = reinterpret_cast<Window*>(GetWindowLongPtr(hwnd, GWLP_USERDATA));
-		WindowEventData window_data{};
+		WindowEventInfo window_data{};
 		window_data.handle = hwnd;
 		window_data.msg  = static_cast<Uint32>(msg);
 		window_data.wparam = static_cast<Uint64>(w_param);
@@ -36,9 +36,9 @@ namespace adria
     {
         HINSTANCE hinstance = GetModuleHandle(NULL);
         const std::wstring window_title = ToWideString(init.title);
-        const Uint32  window_width = init.width;
-        const Uint32  window_height = init.height;
-        const LPCWSTR class_name = L"AdriaClass";
+		const LPCWSTR class_name = L"AdriaClass";
+		LONG  window_width = (LONG)init.width;
+        LONG  window_height = (LONG)init.height;
 
         WNDCLASSEX wcex{};
         wcex.cbSize = sizeof(WNDCLASSEX);
@@ -53,6 +53,11 @@ namespace adria
         wcex.lpszMenuName = nullptr;
         wcex.lpszClassName = class_name;
         wcex.hIconSm = nullptr;
+
+		RECT rect = { 0, 0, window_width, window_height };
+		AdjustWindowRect(&rect, WS_OVERLAPPEDWINDOW, FALSE);
+        window_width = rect.right - rect.left;
+        window_height = rect.bottom - rect.top;
 
         if (!RegisterClassExW(&wcex)) MessageBoxA(nullptr, "Window class registration failed!", "Fatal Error!", MB_ICONEXCLAMATION | MB_OK);
         hwnd = CreateWindowExW
@@ -140,7 +145,7 @@ namespace adria
         return GetForegroundWindow() == hwnd;
     }
 
-	void Window::BroadcastEvent(WindowEventData const& data)
+	void Window::BroadcastEvent(WindowEventInfo const& data)
 	{
         window_event.Broadcast(data);
 	}

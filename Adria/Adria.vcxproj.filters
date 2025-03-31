@@ -8,9 +8,6 @@
     <Filter Include="Utilities">
       <UniqueIdentifier>{5f5eb8d6-7ace-4da4-9c09-4c0421c6d88e}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Logging">
-      <UniqueIdentifier>{0267d83e-83de-4015-82c3-053aae4c0283}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Core">
       <UniqueIdentifier>{1471750e-b525-434b-8cb0-2a8b5be3e67d}</UniqueIdentifier>
     </Filter>
@@ -143,12 +140,24 @@
     <Filter Include="External\FFX\gpu\dof">
       <UniqueIdentifier>{37c1550d-f882-46be-b272-c5274b8161e5}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Shaders\ReSTIR\DI">
+      <UniqueIdentifier>{47d769cd-123b-43a6-a8de-eae965e46835}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="External\NvPerf">
+      <UniqueIdentifier>{aa22c4ac-2552-45d1-b97e-a983a3c066a5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="External\NvPerf\Utility">
+      <UniqueIdentifier>{14d04b56-e3ae-4941-a931-96c1c1215883}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="External\ImPlot">
+      <UniqueIdentifier>{cadfcff4-f3ad-4fcb-aab0-5b61c7f672f9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Loggers">
+      <UniqueIdentifier>{a79d8c43-94f1-4487-9b50-cf1c104c0265}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="Logging\Logger.cpp">
-      <Filter>Logging</Filter>
-    </ClCompile>
     <ClCompile Include="Core\Engine.cpp">
       <Filter>Core</Filter>
     </ClCompile>
@@ -224,7 +233,7 @@
     <ClCompile Include="Rendering\DeferredLightingPass.cpp">
       <Filter>Rendering\Passes</Filter>
     </ClCompile>
-    <ClCompile Include="Rendering\VolumetricLightingPass.cpp">
+    <ClCompile Include="Rendering\RayMarchedVolumetricFogPass.cpp">
       <Filter>Rendering\Passes</Filter>
     </ClCompile>
     <ClCompile Include="Rendering\RayTracedShadowsPass.cpp">
@@ -360,36 +369,6 @@
     <ClCompile Include="..\External\meshoptimizer\vfetchoptimizer.cpp">
       <Filter>External\meshoptimizer</Filter>
     </ClCompile>
-    <ClCompile Include="..\External\ImGui\ImGui\imgui.cpp">
-      <Filter>External\ImGui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\External\ImGui\ImGui\imgui_demo.cpp">
-      <Filter>External\ImGui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\External\ImGui\ImGui\imgui_draw.cpp">
-      <Filter>External\ImGui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\External\ImGui\ImGui\imgui_impl_dx12.cpp">
-      <Filter>External\ImGui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\External\ImGui\ImGui\imgui_impl_win32.cpp">
-      <Filter>External\ImGui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\External\ImGui\ImGui\imgui_tables.cpp">
-      <Filter>External\ImGui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\External\ImGui\ImGui\imgui_widgets.cpp">
-      <Filter>External\ImGui</Filter>
-    </ClCompile>
-    <ClCompile Include="Logging\OutputStreamLogger.cpp">
-      <Filter>Logging</Filter>
-    </ClCompile>
-    <ClCompile Include="Logging\OutputDebugStringLogger.cpp">
-      <Filter>Logging</Filter>
-    </ClCompile>
-    <ClCompile Include="Logging\FileLogger.cpp">
-      <Filter>Logging</Filter>
-    </ClCompile>
     <ClCompile Include="Rendering\HelperPasses.cpp">
       <Filter>Rendering\Passes</Filter>
     </ClCompile>
@@ -447,16 +426,13 @@
     <ClCompile Include="Graphics\GfxNsightAftermathGpuCrashTracker.cpp">
       <Filter>Graphics</Filter>
     </ClCompile>
-    <ClCompile Include="Rendering\ReSTIR_DI.cpp">
-      <Filter>Rendering</Filter>
-    </ClCompile>
     <ClCompile Include="Graphics\GfxStateObject.cpp">
       <Filter>Graphics</Filter>
     </ClCompile>
     <ClCompile Include="Graphics\GfxRayTracingShaderTable.cpp">
       <Filter>Graphics</Filter>
     </ClCompile>
-    <ClCompile Include="Rendering\VolumetricFogPass.cpp">
+    <ClCompile Include="Rendering\FogVolumesPass.cpp">
       <Filter>Rendering\Passes</Filter>
     </ClCompile>
     <ClCompile Include="Graphics\GfxShaderKey.cpp">
@@ -468,7 +444,7 @@
     <ClCompile Include="Rendering\SunPass.cpp">
       <Filter>Rendering\Passes</Filter>
     </ClCompile>
-    <ClCompile Include="Rendering\RendererOutputPass.cpp">
+    <ClCompile Include="Rendering\RendererDebugViewPass.cpp">
       <Filter>Rendering\Passes</Filter>
     </ClCompile>
     <ClCompile Include="Rendering\DDGIPass.cpp">
@@ -549,9 +525,6 @@
     <ClCompile Include="Rendering\VolumetricCloudsPass.cpp">
       <Filter>Rendering\Passes\Post Effects</Filter>
     </ClCompile>
-    <ClCompile Include="Rendering\XeSSPass.cpp">
-      <Filter>Rendering\Passes\Post Effects</Filter>
-    </ClCompile>
     <ClCompile Include="Rendering\DepthOfFieldPass.cpp">
       <Filter>Rendering\Passes\Post Effects</Filter>
     </ClCompile>
@@ -564,9 +537,91 @@
     <ClCompile Include="Utilities\CLIParser.cpp">
       <Filter>Utilities</Filter>
     </ClCompile>
-    <ClCompile Include="Graphics\GfxCommandSignature.cpp" />
-    <ClCompile Include="Core\CommandLineOptions.cpp" />
     <ClCompile Include="my.cpp" />
+    <ClCompile Include="Core\CommandLineOptions.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="Graphics\GfxCommandSignature.cpp">
+      <Filter>Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="Graphics\GfxNsightPerfManager.cpp">
+      <Filter>Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="..\External\ImGui\imgui.cpp">
+      <Filter>External\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\External\ImGui\imgui_demo.cpp">
+      <Filter>External\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\External\ImGui\imgui_draw.cpp">
+      <Filter>External\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\External\ImGui\imgui_impl_dx12.cpp">
+      <Filter>External\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\External\ImGui\imgui_impl_win32.cpp">
+      <Filter>External\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\External\ImGui\imgui_tables.cpp">
+      <Filter>External\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\External\ImGui\imgui_widgets.cpp">
+      <Filter>External\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\External\ImPlot\implot.cpp">
+      <Filter>External\ImPlot</Filter>
+    </ClCompile>
+    <ClCompile Include="..\External\ImPlot\implot_demo.cpp">
+      <Filter>External\ImPlot</Filter>
+    </ClCompile>
+    <ClCompile Include="..\External\ImPlot\implot_items.cpp">
+      <Filter>External\ImPlot</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderGraph\RenderGraphEvent.cpp">
+      <Filter>RenderGraph</Filter>
+    </ClCompile>
+    <ClCompile Include="Rendering\TransparentPass.cpp">
+      <Filter>Rendering\Passes</Filter>
+    </ClCompile>
+    <ClCompile Include="Rendering\OIDNDenoiserPass.cpp">
+      <Filter>Rendering\Passes</Filter>
+    </ClCompile>
+    <ClCompile Include="Rendering\ReSTIR_DI.cpp">
+      <Filter>Rendering\Passes</Filter>
+    </ClCompile>
+    <ClCompile Include="Rendering\VolumetricFogManager.cpp">
+      <Filter>Rendering\Passes</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Log.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Loggers\FileLogger.cpp">
+      <Filter>Core\Loggers</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Loggers\OutputDebugStringLogger.cpp">
+      <Filter>Core\Loggers</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Loggers\OutputStreamLogger.cpp">
+      <Filter>Core\Loggers</Filter>
+    </ClCompile>
+    <ClCompile Include="Rendering\AmbientOcclusionManager.cpp">
+      <Filter>Rendering\Passes</Filter>
+    </ClCompile>
+    <ClCompile Include="Graphics\GfxScopedEvent.cpp">
+      <Filter>Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="Rendering\DirectMLUpscalerPass.cpp">
+      <Filter>Rendering\Passes\Post Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="Rendering\XeSS2Pass.cpp">
+      <Filter>Rendering\Passes\Post Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="Rendering\DirectMLDenoiserPass.cpp">
+      <Filter>Rendering\Passes</Filter>
+    </ClCompile>
+    <ClCompile Include="Rendering\DirectMLPassBase.cpp">
+      <Filter>Rendering\Passes</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Utilities\RingBuffer.h">
@@ -586,9 +641,6 @@
     </ClInclude>
     <ClInclude Include="Utilities\TemplatesUtil.h">
       <Filter>Utilities</Filter>
-    </ClInclude>
-    <ClInclude Include="Logging\Logger.h">
-      <Filter>Logging</Filter>
     </ClInclude>
     <ClInclude Include="Core\Types.h">
       <Filter>Core</Filter>
@@ -626,10 +678,10 @@
     <ClInclude Include="Graphics\GfxShaderCompiler.h">
       <Filter>Graphics</Filter>
     </ClInclude>
-    <ClInclude Include="Utilities\RingAllocator.h">
+    <ClInclude Include="Utilities\RingOffsetAllocator.h">
       <Filter>Utilities</Filter>
     </ClInclude>
-    <ClInclude Include="Utilities\LinearAllocator.h">
+    <ClInclude Include="Utilities\LinearOffsetAllocator.h">
       <Filter>Utilities</Filter>
     </ClInclude>
     <ClInclude Include="Utilities\AllocatorUtil.h">
@@ -773,7 +825,7 @@
     <ClInclude Include="Rendering\DeferredLightingPass.h">
       <Filter>Rendering\Passes</Filter>
     </ClInclude>
-    <ClInclude Include="Rendering\VolumetricLightingPass.h">
+    <ClInclude Include="Rendering\RayMarchedVolumetricFogPass.h">
       <Filter>Rendering\Passes</Filter>
     </ClInclude>
     <ClInclude Include="Rendering\RayTracedShadowsPass.h">
@@ -927,39 +979,6 @@
     <ClInclude Include="..\External\FontAwesome\IconsFontAwesome4.h">
       <Filter>External\FontAwesome</Filter>
     </ClInclude>
-    <ClInclude Include="..\External\ImGui\ImGui\imconfig.h">
-      <Filter>External\ImGui</Filter>
-    </ClInclude>
-    <ClInclude Include="..\External\ImGui\ImGui\imgui.h">
-      <Filter>External\ImGui</Filter>
-    </ClInclude>
-    <ClInclude Include="..\External\ImGui\ImGui\imgui_impl_dx12.h">
-      <Filter>External\ImGui</Filter>
-    </ClInclude>
-    <ClInclude Include="..\External\ImGui\ImGui\imgui_impl_win32.h">
-      <Filter>External\ImGui</Filter>
-    </ClInclude>
-    <ClInclude Include="..\External\ImGui\ImGui\imgui_internal.h">
-      <Filter>External\ImGui</Filter>
-    </ClInclude>
-    <ClInclude Include="..\External\ImGui\ImGui\imstb_rectpack.h">
-      <Filter>External\ImGui</Filter>
-    </ClInclude>
-    <ClInclude Include="..\External\ImGui\ImGui\imstb_textedit.h">
-      <Filter>External\ImGui</Filter>
-    </ClInclude>
-    <ClInclude Include="..\External\ImGui\ImGui\imstb_truetype.h">
-      <Filter>External\ImGui</Filter>
-    </ClInclude>
-    <ClInclude Include="Logging\OutputStreamLogger.h">
-      <Filter>Logging</Filter>
-    </ClInclude>
-    <ClInclude Include="Logging\OutputDebugStringLogger.h">
-      <Filter>Logging</Filter>
-    </ClInclude>
-    <ClInclude Include="Logging\FileLogger.h">
-      <Filter>Logging</Filter>
-    </ClInclude>
     <ClInclude Include="Rendering\HelperPasses.h">
       <Filter>Rendering\Passes</Filter>
     </ClInclude>
@@ -1041,10 +1060,7 @@
     <ClInclude Include="Graphics\GfxStateObject.h">
       <Filter>Graphics</Filter>
     </ClInclude>
-    <ClInclude Include="Rendering\ReSTIR_DI.h">
-      <Filter>Rendering</Filter>
-    </ClInclude>
-    <ClInclude Include="Rendering\VolumetricFogPass.h">
+    <ClInclude Include="Rendering\FogVolumesPass.h">
       <Filter>Rendering\Passes</Filter>
     </ClInclude>
     <ClInclude Include="Math\NormalsUtil.h">
@@ -1068,7 +1084,7 @@
     <ClInclude Include="Rendering\SunPass.h">
       <Filter>Rendering\Passes</Filter>
     </ClInclude>
-    <ClInclude Include="Rendering\RendererOutputPass.h">
+    <ClInclude Include="Rendering\RendererDebugViewPass.h">
       <Filter>Rendering\Passes</Filter>
     </ClInclude>
     <ClInclude Include="Core\ConsoleManager.h">
@@ -1156,9 +1172,6 @@
       <Filter>Rendering\Passes\Post Effects</Filter>
     </ClInclude>
     <ClInclude Include="Rendering\VolumetricCloudsPass.h">
-      <Filter>Rendering\Passes\Post Effects</Filter>
-    </ClInclude>
-    <ClInclude Include="Rendering\XeSSPass.h">
       <Filter>Rendering\Passes\Post Effects</Filter>
     </ClInclude>
     <ClInclude Include="Rendering\DepthOfFieldPass.h">
@@ -1395,7 +1408,276 @@
     <ClInclude Include="..\External\FidelityFX-SDK\include\FidelityFX\gpu\vrs\ffx_vrs_resources.h">
       <Filter>External\FFX\gpu\vrs</Filter>
     </ClInclude>
-    <ClInclude Include="Core\CommandLineOptions.h" />
+    <ClInclude Include="Core\CommandLineOptions.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics\GfxNsightPerfManager.h">
+      <Filter>Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\NvPerf\nvperf_common.h">
+      <Filter>External\NvPerf</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\NvPerf\nvperf_d3d12_host.h">
+      <Filter>External\NvPerf</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\NvPerf\nvperf_d3d12_target.h">
+      <Filter>External\NvPerf</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\NvPerf\nvperf_device_host.h">
+      <Filter>External\NvPerf</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\NvPerf\nvperf_device_target.h">
+      <Filter>External\NvPerf</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\NvPerf\nvperf_host.h">
+      <Filter>External\NvPerf</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\NvPerf\nvperf_host_impl.h">
+      <Filter>External\NvPerf</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\NvPerf\nvperf_target.h">
+      <Filter>External\NvPerf</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\NvPerf\nvperf_versions_target.h">
+      <Filter>External\NvPerf</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\NvPerf\NvPerfUtility\include\NvPerfCommonHtmlTemplates.h">
+      <Filter>External\NvPerf\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\NvPerf\NvPerfUtility\include\NvPerfCounterConfiguration.h">
+      <Filter>External\NvPerf\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\NvPerf\NvPerfUtility\include\NvPerfCounterData.h">
+      <Filter>External\NvPerf\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\NvPerf\NvPerfUtility\include\NvPerfCpuMarkerTrace.h">
+      <Filter>External\NvPerf\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\NvPerf\NvPerfUtility\include\NvPerfD3D.h">
+      <Filter>External\NvPerf\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\NvPerf\NvPerfUtility\include\NvPerfD3D11.h">
+      <Filter>External\NvPerf\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\NvPerf\NvPerfUtility\include\NvPerfD3D12.h">
+      <Filter>External\NvPerf\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\NvPerf\NvPerfUtility\include\NvPerfDeviceProperties.h">
+      <Filter>External\NvPerf\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\NvPerf\NvPerfUtility\include\NvPerfHudConfigurationsAD10X.h">
+      <Filter>External\NvPerf\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\NvPerf\NvPerfUtility\include\NvPerfHudConfigurationsGA10B.h">
+      <Filter>External\NvPerf\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\NvPerf\NvPerfUtility\include\NvPerfHudConfigurationsGA10X.h">
+      <Filter>External\NvPerf\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\NvPerf\NvPerfUtility\include\NvPerfHudConfigurationsGB10B.h">
+      <Filter>External\NvPerf\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\NvPerf\NvPerfUtility\include\NvPerfHudConfigurationsGB20X.h">
+      <Filter>External\NvPerf\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\NvPerf\NvPerfUtility\include\NvPerfHudConfigurationsHAL.h">
+      <Filter>External\NvPerf\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\NvPerf\NvPerfUtility\include\NvPerfHudConfigurationsTU10X.h">
+      <Filter>External\NvPerf\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\NvPerf\NvPerfUtility\include\NvPerfHudConfigurationsTU11X.h">
+      <Filter>External\NvPerf\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\NvPerf\NvPerfUtility\include\NvPerfHudDataModel.h">
+      <Filter>External\NvPerf\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\NvPerf\NvPerfUtility\include\NvPerfHudImPlotRenderer.h">
+      <Filter>External\NvPerf\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\NvPerf\NvPerfUtility\include\NvPerfHudRenderer.h">
+      <Filter>External\NvPerf\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\NvPerf\NvPerfUtility\include\NvPerfHudTextRenderer.h">
+      <Filter>External\NvPerf\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\NvPerf\NvPerfUtility\include\NvPerfInit.h">
+      <Filter>External\NvPerf\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\NvPerf\NvPerfUtility\include\NvPerfMetricConfigurationsAD10X.h">
+      <Filter>External\NvPerf\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\NvPerf\NvPerfUtility\include\NvPerfMetricConfigurationsGA10X.h">
+      <Filter>External\NvPerf\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\NvPerf\NvPerfUtility\include\NvPerfMetricConfigurationsGB20X.h">
+      <Filter>External\NvPerf\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\NvPerf\NvPerfUtility\include\NvPerfMetricConfigurationsHAL.h">
+      <Filter>External\NvPerf\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\NvPerf\NvPerfUtility\include\NvPerfMetricConfigurationsTU10X.h">
+      <Filter>External\NvPerf\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\NvPerf\NvPerfUtility\include\NvPerfMetricsConfigBuilder.h">
+      <Filter>External\NvPerf\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\NvPerf\NvPerfUtility\include\NvPerfMetricsConfigLoader.h">
+      <Filter>External\NvPerf\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\NvPerf\NvPerfUtility\include\NvPerfMetricsEvaluator.h">
+      <Filter>External\NvPerf\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\NvPerf\NvPerfUtility\include\NvPerfMiniTrace.h">
+      <Filter>External\NvPerf\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\NvPerf\NvPerfUtility\include\NvPerfMiniTraceD3D12.h">
+      <Filter>External\NvPerf\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\NvPerf\NvPerfUtility\include\NvPerfPeriodicSamplerCommon.h">
+      <Filter>External\NvPerf\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\NvPerf\NvPerfUtility\include\NvPerfPeriodicSamplerD3D12.h">
+      <Filter>External\NvPerf\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\NvPerf\NvPerfUtility\include\NvPerfPeriodicSamplerGpu.h">
+      <Filter>External\NvPerf\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\NvPerf\NvPerfUtility\include\NvPerfRangeProfiler.h">
+      <Filter>External\NvPerf\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\NvPerf\NvPerfUtility\include\NvPerfRangeProfilerD3D12.h">
+      <Filter>External\NvPerf\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\NvPerf\NvPerfUtility\include\NvPerfReportDefinition.h">
+      <Filter>External\NvPerf\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\NvPerf\NvPerfUtility\include\NvPerfReportDefinitionAD10X.h">
+      <Filter>External\NvPerf\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\NvPerf\NvPerfUtility\include\NvPerfReportDefinitionGA10B.h">
+      <Filter>External\NvPerf\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\NvPerf\NvPerfUtility\include\NvPerfReportDefinitionGA10X.h">
+      <Filter>External\NvPerf\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\NvPerf\NvPerfUtility\include\NvPerfReportDefinitionGB10B.h">
+      <Filter>External\NvPerf\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\NvPerf\NvPerfUtility\include\NvPerfReportDefinitionGB20X.h">
+      <Filter>External\NvPerf\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\NvPerf\NvPerfUtility\include\NvPerfReportDefinitionHAL.h">
+      <Filter>External\NvPerf\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\NvPerf\NvPerfUtility\include\NvPerfReportDefinitionTU10X.h">
+      <Filter>External\NvPerf\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\NvPerf\NvPerfUtility\include\NvPerfReportDefinitionTU11X.h">
+      <Filter>External\NvPerf\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\NvPerf\NvPerfUtility\include\NvPerfReportGenerator.h">
+      <Filter>External\NvPerf\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\NvPerf\NvPerfUtility\include\NvPerfReportGeneratorD3D12.h">
+      <Filter>External\NvPerf\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\NvPerf\NvPerfUtility\include\NvPerfScopeExitGuard.h">
+      <Filter>External\NvPerf\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\NvPerf\NvPerfUtility\include\NvPerfUtilities.h">
+      <Filter>External\NvPerf\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\ImGui\imconfig.h">
+      <Filter>External\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\ImGui\imgui.h">
+      <Filter>External\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\ImGui\imgui_impl_dx12.h">
+      <Filter>External\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\ImGui\imgui_impl_win32.h">
+      <Filter>External\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\ImGui\imgui_internal.h">
+      <Filter>External\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\ImGui\imstb_rectpack.h">
+      <Filter>External\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\ImGui\imstb_textedit.h">
+      <Filter>External\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\ImGui\imstb_truetype.h">
+      <Filter>External\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\ImPlot\implot.h">
+      <Filter>External\ImPlot</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\ImPlot\implot_internal.h">
+      <Filter>External\ImPlot</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderGraph\RenderGraphEvent.h">
+      <Filter>RenderGraph</Filter>
+    </ClInclude>
+    <ClInclude Include="Utilities\Tree.h">
+      <Filter>Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="Utilities\LinearAllocator.h">
+      <Filter>Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderGraph\RenderGraphAllocator.h">
+      <Filter>RenderGraph</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics\GfxScopedEvent.h">
+      <Filter>Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics\GfxProfilerFwd.h">
+      <Filter>Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="Rendering\TransparentPass.h">
+      <Filter>Rendering\Passes</Filter>
+    </ClInclude>
+    <ClInclude Include="Rendering\OIDNDenoiserPass.h">
+      <Filter>Rendering\Passes</Filter>
+    </ClInclude>
+    <ClInclude Include="Rendering\ReSTIR_DI.h">
+      <Filter>Rendering\Passes</Filter>
+    </ClInclude>
+    <ClInclude Include="Rendering\VolumetricFogManager.h">
+      <Filter>Rendering\Passes</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Log.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Loggers\FileLogger.h">
+      <Filter>Core\Loggers</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Loggers\OutputDebugStringLogger.h">
+      <Filter>Core\Loggers</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Loggers\OutputStreamLogger.h">
+      <Filter>Core\Loggers</Filter>
+    </ClInclude>
+    <ClInclude Include="Rendering\AmbientOcclusionManager.h">
+      <Filter>Rendering\Passes</Filter>
+    </ClInclude>
+    <ClInclude Include="Utilities\FloatCompressor.h">
+      <Filter>Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="Rendering\DirectMLUpscalerPass.h">
+      <Filter>Rendering\Passes\Post Effects</Filter>
+    </ClInclude>
+    <ClInclude Include="Rendering\XeSS2Pass.h">
+      <Filter>Rendering\Passes\Post Effects</Filter>
+    </ClInclude>
+    <ClInclude Include="Rendering\DirectMLPassBase.h">
+      <Filter>Rendering\Passes</Filter>
+    </ClInclude>
+    <ClInclude Include="Rendering\DirectMLDenoiserPass.h">
+      <Filter>Rendering\Passes</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Adria.rc">
@@ -1449,9 +1731,6 @@
     <None Include="Resources\Shaders\Random.hlsli">
       <Filter>Shaders</Filter>
     </None>
-    <None Include="Resources\Shaders\Reflections.hlsli">
-      <Filter>Shaders</Filter>
-    </None>
     <None Include="Resources\Shaders\Scene.hlsli">
       <Filter>Shaders</Filter>
     </None>
@@ -1501,9 +1780,6 @@
     <None Include="Saved\Scenes\newsponza.json">
       <Filter>Saved\Scenes</Filter>
     </None>
-    <None Include="Resources\Shaders\ReSTIR\ReSTIRUtil.hlsli">
-      <Filter>Shaders\ReSTIR</Filter>
-    </None>
     <None Include="Saved\Ini\default_cvars.ini">
       <Filter>Saved\Ini Files</Filter>
     </None>
@@ -1515,6 +1791,30 @@
     </None>
     <None Include="Saved\Scenes\pica_pica.json">
       <Filter>Saved\Scenes</Filter>
+    </None>
+    <None Include="Resources\Shaders\ReSTIR\DI\ReSTIR_DI_Util.hlsli">
+      <Filter>Shaders\ReSTIR\DI</Filter>
+    </None>
+    <None Include="..\External\ImPlot\LICENSE">
+      <Filter>External\ImPlot</Filter>
+    </None>
+    <None Include="..\External\ImPlot\README.md">
+      <Filter>External\ImPlot</Filter>
+    </None>
+    <None Include="..\External\ImPlot\TODO.md">
+      <Filter>External\ImPlot</Filter>
+    </None>
+    <None Include="Resources\Shaders\Surface.hlsli">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Resources\Shaders\LightInfo.hlsli">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Resources\Shaders\ReSTIR\ReSTIR_Util.hlsli">
+      <Filter>Shaders\ReSTIR</Filter>
+    </None>
+    <None Include="Resources\Shaders\Postprocess\SSRCommon.hlsli">
+      <Filter>Shaders\Postprocess</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
@@ -1647,9 +1947,6 @@
     <FxCompile Include="Resources\Shaders\Other\Picking.hlsl">
       <Filter>Shaders\Other</Filter>
     </FxCompile>
-    <FxCompile Include="Resources\Shaders\Other\Simple.hlsl">
-      <Filter>Shaders\Other</Filter>
-    </FxCompile>
     <FxCompile Include="Resources\Shaders\Ocean\FFT.hlsl">
       <Filter>Shaders\Ocean</Filter>
     </FxCompile>
@@ -1680,13 +1977,10 @@
     <FxCompile Include="Resources\Shaders\Weather\RainBlocker.hlsl">
       <Filter>Shaders\Weather</Filter>
     </FxCompile>
-    <FxCompile Include="Resources\Shaders\ReSTIR\InitialSampling.hlsl">
-      <Filter>Shaders\ReSTIR</Filter>
-    </FxCompile>
     <FxCompile Include="Resources\Shaders\Lighting\VolumetricFog.hlsl">
       <Filter>Shaders\Lighting</Filter>
     </FxCompile>
-    <FxCompile Include="Resources\Shaders\Other\RendererOutput.hlsl">
+    <FxCompile Include="Resources\Shaders\Other\RendererDebugView.hlsl">
       <Filter>Shaders\Other</Filter>
     </FxCompile>
     <FxCompile Include="Resources\Shaders\Postprocess\DepthOfField\CircleOfConfusion.hlsl">
@@ -1722,16 +2016,31 @@
     <FxCompile Include="Resources\Shaders\Other\VRSOverlay.hlsl">
       <Filter>Shaders\Other</Filter>
     </FxCompile>
-    <FxCompile Include="Resources\Shaders\ReSTIR\TemporalResampling.hlsl">
-      <Filter>Shaders\ReSTIR</Filter>
+    <FxCompile Include="Resources\Shaders\ReSTIR\DI\InitialSampling.hlsl">
+      <Filter>Shaders\ReSTIR\DI</Filter>
     </FxCompile>
-    <FxCompile Include="Resources\Shaders\ReSTIR\SpatialResampling.hlsl">
-      <Filter>Shaders\ReSTIR</Filter>
+    <FxCompile Include="Resources\Shaders\ReSTIR\DI\SpatialResampling.hlsl">
+      <Filter>Shaders\ReSTIR\DI</Filter>
+    </FxCompile>
+    <FxCompile Include="Resources\Shaders\ReSTIR\DI\TemporalResampling.hlsl">
+      <Filter>Shaders\ReSTIR\DI</Filter>
+    </FxCompile>
+    <FxCompile Include="Resources\Shaders\Other\Simple.hlsl">
+      <Filter>Shaders\Other</Filter>
+    </FxCompile>
+    <FxCompile Include="Resources\Shaders\Other\Transparent.hlsl">
+      <Filter>Shaders\Other</Filter>
+    </FxCompile>
+    <FxCompile Include="Resources\Shaders\Other\TensorTextureConversions.hlsl">
+      <Filter>Shaders\Other</Filter>
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <Text Include="..\External\FidelityFX-SDK\include\FidelityFX\host\backends\dx12\license.txt">
       <Filter>External\FFX\host\backends\dx12</Filter>
+    </Text>
+    <Text Include="..\External\ImPlot\provenance.txt">
+      <Filter>External\ImPlot</Filter>
     </Text>
   </ItemGroup>
 </Project>

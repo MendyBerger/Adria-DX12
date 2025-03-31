@@ -7,10 +7,11 @@ Graphics engine written in C++ using DirectX12.
     - Automatic resource barriers
     - Resource reuse using resource pool
     - Automatic resource bind flags and initial state deduction
+    - Async Compute
 * DDGI
 * GPU-Driven Rendering : GPU frustum culling + 2 phase GPU occlusion culling
-* Reference path tracer 
-* Temporal upscalers : FSR2, FSR3, XeSS, DLSS3
+* Reference path tracer + OIDN denoiser
+* Temporal upscalers : FSR2, FSR3, XeSS, DLSS3, DirectML 
 * Ultimate Bindless resource binding
 * Variable Rate Shading (FFX)
 * Volumetric lighting: Raymarching, Fog volumes
@@ -39,13 +40,9 @@ Graphics engine written in C++ using DirectX12.
     - Shader hot reloading
     - Render graph graphviz visualization
     - Shader debug printf
-    - Nsight Aftermath SDK
+    - Nsight Aftermath SDK, Nsight Perf SDK
     - Debug Outputs: Diffuse, Normal, Depth, Roughness, Metallic, Emissive, AO, GI, \
-      Custom, Shading Extension, View Mipmaps, Triangle Overdraw
-
-## TODO
-* ReSTIR DI
-* ReSTIR GI
+      Custom, Shading Extension, View Mipmaps, Triangle Overdraw, Material and Meshlet ID, Motion Vectors
 
 ## Screenshots
 
@@ -69,6 +66,9 @@ Graphics engine written in C++ using DirectX12.
 ### Bistro
 ![](Adria/Saved/Screenshots/bistro.png "Rainy Bistro") 
 
+### New Sponza
+![](Adria/Saved/Screenshots/newsponza.png "New Sponza") 
+
 ### Sun Temple
 ![](Adria/Saved/Screenshots/suntemple.png "Sun Temple") 
 
@@ -81,9 +81,6 @@ Graphics engine written in C++ using DirectX12.
 ### Path Tracer
 ![](Adria/Saved/Screenshots/pathtracing1.png "Path traced Sponza") 
 ![](Adria/Saved/Screenshots/arcade.png "Path traced Arcade") 
-
-### Editor
-![](Adria/Saved/Screenshots/editor.png "Editor") 
 
 ### Ray Tracing Features
 
@@ -99,8 +96,21 @@ Graphics engine written in C++ using DirectX12.
 |---|---|
 |  ![](Adria/Saved/Screenshots/ssao.png) | ![](Adria/Saved/Screenshots/rtao.png) |
 
+### Triangle Overdraw Debug View
+![](Adria/Saved/Screenshots/bistrooverdraw.png "Bistro Triangle Overdraw") 
+
+### Transparent Objects
+![](Adria/Saved/Screenshots/transparent.png "Transparent Water") 
+
+### Editor
+![](Adria/Saved/Screenshots/editor2.png "Editor") 
+
+### Nsight Perf HUD
+![](Adria/Saved/Screenshots/nsightperf.png "Nsight Perf HUD") 
+
 ### Render Graph Visualization
 ![](Adria/Saved/RenderGraph/rendergraph.svg "Render graph visualization") 
+
 
 
 

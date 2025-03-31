@@ -1,11 +1,6 @@
 #pragma once
 #include <memory>
-#define IMGUI_DEFINE_MATH_OPERATORS
-#include "ImGui/imgui.h"
-#include "ImGui/imgui_impl_win32.h"
-#include "ImGui/imgui_impl_dx12.h"
 #include "Graphics/GfxDescriptor.h"
-
 
 namespace adria
 {
@@ -17,7 +12,7 @@ namespace adria
 
 	using GUIDescriptorAllocator = GfxRingDescriptorAllocator<false>;
 
-	struct WindowEventData;
+	struct WindowEventInfo;
 
 	class ImGuiManager
 	{
@@ -28,7 +23,7 @@ namespace adria
 		void Begin() const;
 		void End(GfxCommandList* cmd_list) const;
 
-		void OnWindowEvent(WindowEventData const&) const;
+		void OnWindowEvent(WindowEventInfo const&) const;
 
 		void ToggleVisibility();
 		Bool IsVisible() const;

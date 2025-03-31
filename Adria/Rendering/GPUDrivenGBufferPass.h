@@ -11,7 +11,7 @@ namespace adria
 	class GfxDevice;
 	class GfxTexture;
 	class GfxBuffer;
-	enum class RendererOutput : Uint32;
+	enum class RendererDebugView : Uint32;
 
 	class GPUDrivenGBufferPass
 	{
@@ -27,7 +27,6 @@ namespace adria
 			Uint32 phase1_visible_meshlets;
 			Uint32 phase2_visible_meshlets;
 		};
-
 
 	public:
 		GPUDrivenGBufferPass(entt::registry& reg, GfxDevice* gfx, Uint32 width, Uint32 height);
@@ -49,7 +48,11 @@ namespace adria
 		{
 			rain_active = enabled;
 		}
-		void OnRendererOutputChanged(RendererOutput renderer_output);
+		void OnDebugViewChanged(RendererDebugView renderer_output);
+		void OnTransparentChanged(Bool transparent)
+		{
+			skip_alpha_blended = transparent;
+		}
 
 	private:
 		GfxDevice* gfx;
@@ -62,6 +65,7 @@ namespace adria
 		Uint32 hzb_height = 0;
 
 		Bool occlusion_culling = true;
+		Bool skip_alpha_blended = false;
 
 		std::unique_ptr<GfxBuffer> debug_buffer;
 		Bool display_debug_stats = false;
@@ -70,6 +74,8 @@ namespace adria
 		Bool rain_active = false;
 		Bool debug_mipmaps = false;
 		Bool triangle_overdraw = false;
+		Bool material_ids = false;
+		Bool meshlet_ids = false;
 		std::unique_ptr<GfxMeshShaderPipelineStatePermutations> draw_psos;
 		std::unique_ptr<GfxComputePipelineStatePermutations>	cull_meshlets_psos;
 		std::unique_ptr<GfxComputePipelineStatePermutations>	cull_instances_psos;

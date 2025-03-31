@@ -24,9 +24,8 @@ struct PSOutput
 {
 	float4 NormalRT	: SV_TARGET0;
 	float4 DiffuseRT : SV_TARGET1;
-	float4 EmissiveRT			: SV_TARGET2;
-	float4 CustomRT			: SV_TARGET3;
-
+	float4 EmissiveRT : SV_TARGET2;
+	float4 CustomRT	 : SV_TARGET3;
 };
 
 VSToPS GBufferVS(uint vertexId : SV_VertexID)
@@ -78,6 +77,11 @@ PSOutput GBufferPS(VSToPS input)
 	mipLevel = clamp(mipLevel, 0.0f, 5.0f);
 	int mipColorIndex = round(mipLevel);
 	output.DiffuseRT = float4(mipColors[mipColorIndex], 1.0f);
+	return output;
+#endif
+#if MATERIAL_ID
+	const uint materialId = instanceData.materialIdx;
+	output.DiffuseRT = float4(UintToColor(materialId), 1.0f);
 	return output;
 #endif
 	float4 albedoColor = albedoTexture.Sample(LinearWrapSampler, input.Uvs) * float4(materialData.baseColorFactor, 1.0f);

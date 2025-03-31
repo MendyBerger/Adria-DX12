@@ -39,8 +39,12 @@ namespace adria
 		}
 		SSAOResolution->AddOnChanged(ConsoleVariableDelegate::CreateLambda([&](IConsoleVariable* cvar) { OnResize(width, height); }));
 	}
+	SSAOPass::~SSAOPass() = default;
+
 	void SSAOPass::AddPass(RenderGraph& rendergraph)
 	{
+		RG_SCOPE(rendergraph, "SSAO");
+
 		struct SSAOPassData
 		{
 			RGTextureReadOnlyId gbuffer_normal;
@@ -104,8 +108,9 @@ namespace adria
 				cmd_list->SetRootCBV(2, ssao_kernel);
 				cmd_list->Dispatch(DivideAndRoundUp(ssao_width, 16), DivideAndRoundUp(ssao_height, 16), 1);
 
-			}, RGPassType::Compute);
+			}, RGPassType::AsyncCompute);
 
+		blur_pass.SetAsyncCompute(true);
 		blur_pass.AddPass(rendergraph, RG_NAME(SSAO_Output), RG_NAME(AmbientOcclusion), " SSAO");
 	}
 

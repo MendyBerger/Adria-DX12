@@ -5,7 +5,6 @@
 #include "Paths.h"
 #include "CommandLineOptions.h"
 #include "ConsoleManager.h"
-#include "Logging/Logger.h"
 #include "Graphics/GfxDevice.h"
 #include "Graphics/GfxCommandList.h"
 #include "Rendering/Renderer.h"
@@ -64,19 +63,20 @@ namespace adria
 		g_ThreadPool.Destroy();
 	}
 
-	void Engine::OnWindowEvent(WindowEventData const& msg_data)
+	void Engine::OnWindowEvent(WindowEventInfo const& msg_data)
 	{
 		g_Input.OnWindowEvent(msg_data);
 	}
 
 	void Engine::Run(MyPluginRuntime* p_runtime, MyWasmModuleId* module_id, MyPluginRuntimeRender*  pr_render)
 	{
-		FrameMarkNamed("EngineFrame");
+		ZoneScopedN("Engine::Run");
 		static Timer timer;
 		Float const dt = timer.MarkInSeconds();
 		g_Input.Tick();
 		Update(dt, p_runtime, module_id);
 		Render(pr_render);
+		FrameMarkNamed("EngineFrame");
 	}
 
 	void Engine::HandleSceneRequest()
@@ -95,13 +95,17 @@ namespace adria
 
 	void Engine::Update(Float dt, MyPluginRuntime*  p_runtime, MyWasmModuleId* module_id)
 	{
+		ZoneScopedN("Engine::Update");
 		HandleSceneRequest();
 		camera->Update(dt, p_runtime, module_id);
 		renderer->NewFrame(camera.get());
 		renderer->Update(dt);
+		gfx->Update();
+		
 	}
 	void Engine::Render(MyPluginRuntimeRender*  pr_render)
 	{
+		ZoneScopedN("Engine::Render");
 		gfx->BeginFrame();
 		renderer->Render(pr_render);
 		gfx->EndFrame(pr_render);
@@ -135,14 +139,14 @@ namespace adria
 
 	void Engine::InitializeScene(SceneConfig const& config)
 	{
-		auto cmd_list = gfx->GetLatestCommandList(GfxCommandListType::Graphics);
+		auto cmd_list = gfx->GetLatestGraphicsCommandList();
 		cmd_list->Begin();
 
 		camera = std::make_unique<Camera>(config.camera_params);
 		camera->SetAspectRatio((Float)window->Width() / window->Height());
 		scene_loader->LoadSkybox(config.skybox_params);
 
-		for (auto const& model : config.scene_models) scene_loader->LoadModel_GLTF(model);
+		for (auto const& model : config.scene_models) scene_loader->LoadModel(model);
 		for (auto const& light : config.scene_lights) scene_loader->LoadLight(light);
 
 		auto ray_tracing_view = reg.view<Mesh, RayTracing>();

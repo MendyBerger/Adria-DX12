@@ -23,29 +23,17 @@
 #include "ToneMapPass.h"
 #include "RenderGraph/RenderGraph.h"
 #include "Graphics/GfxPipelineStatePermutations.h"
-#include "Logging/Logger.h"
 #include "Editor/GUICommand.h"
-#include "Core/ConsoleManager.h"
 #include "entt/entity/registry.hpp"
 
 using namespace DirectX;
 
 namespace adria
 {
-	static TAutoConsoleVariable<Int>  AmbientOcclusion("r.AmbientOcclusion", 1, "0 - No AO, 1 - SSAO, 2 - HBAO, 3 - CACAO, 4 - RTAO");
-	
-	enum AmbientOcclusionType : Uint8
-	{
-		AmbientOcclusionType_None,
-		AmbientOcclusionType_SSAO,
-		AmbientOcclusionType_HBAO,
-		AmbientOcclusionType_CACAO,
-		AmbientOcclusionType_RTAO
-	};
 
 	PostProcessor::PostProcessor(GfxDevice* gfx, entt::registry& reg, Uint32 width, Uint32 height)
 		: gfx(gfx), reg(reg), display_width(width), display_height(height), render_width(width), render_height(height),
-		ssao_pass(gfx, width, height), hbao_pass(gfx, width, height), rtao_pass(gfx, width, height), cacao_pass(gfx, width, height)
+		ambient_occlusion_manager(gfx, width, height)
 	{
 		ray_tracing_supported = gfx->GetCapabilities().SupportsRayTracing();
 		InitializePostEffects();
@@ -67,17 +55,12 @@ namespace adria
 
 	void PostProcessor::AddAmbientOcclusionPass(RenderGraph& rg)
 	{
-		switch (AmbientOcclusion.Get())
-		{
-		case AmbientOcclusionType_SSAO:  ssao_pass.AddPass(rg); break;
-		case AmbientOcclusionType_HBAO:  hbao_pass.AddPass(rg); break;
-		case AmbientOcclusionType_CACAO: cacao_pass.AddPass(rg); break;
-		case AmbientOcclusionType_RTAO:  rtao_pass.AddPass(rg); break;
-		}
+		ambient_occlusion_manager.AddPass(rg);
 	}
 
 	void PostProcessor::AddPasses(RenderGraph& rg)
 	{
+		RG_SCOPE(rg, "Postprocessing");
 		final_resource = RG_NAME(HDR_RenderTarget);
 		for (Uint32 i = 0; i < PostEffectType_Count; ++i)
 		{
@@ -86,6 +69,11 @@ namespace adria
 
 		rg.ExportTexture(GetPostEffect<ToneMapPass>()->GetInput(), history_buffer.get());
 		rg.ExportTexture(RG_NAME(DepthStencil), depth_history.get());
+	}
+
+	void PostProcessor::AddMotionVectorsPass(RenderGraph& rg)
+	{
+		post_effects[PostEffectType_MotionVectors]->AddPass(rg, this);
 	}
 
 	void PostProcessor::AddTonemapPass(RenderGraph& rg, RGResourceName input)
@@ -103,21 +91,8 @@ namespace adria
 
 	void PostProcessor::GUI()
 	{
-		QueueGUI([&]()
-			{
-				if (ImGui::Combo("Ambient Occlusion Type", AmbientOcclusion.GetPtr(), "None\0SSAO\0HBAO\0CACAO\0RTAO\0", 5))
-				{
-					if (!ray_tracing_supported && AmbientOcclusion.Get() == 4) AmbientOcclusion->Set(AmbientOcclusionType_SSAO); 
-				}
-			}, GUICommandGroup_PostProcessing, GUICommandSubGroup_AO);
-		switch (AmbientOcclusion.Get())
-		{
-		case AmbientOcclusionType_SSAO:  ssao_pass.GUI();  break;
-		case AmbientOcclusionType_HBAO:  hbao_pass.GUI();  break;
-		case AmbientOcclusionType_CACAO: cacao_pass.GUI(); break;
-		case AmbientOcclusionType_RTAO:  rtao_pass.GUI();  break;
-		}
-
+		
+		ambient_occlusion_manager.GUI();
 		for (auto& post_effect : post_effects)
 		{
 			if (post_effect->IsGUIVisible(this)) post_effect->GUI();
@@ -145,11 +120,7 @@ namespace adria
 	{
 		render_width = w, render_height = h;
 
-		ssao_pass.OnResize(w, h);
-		hbao_pass.OnResize(w, h);
-		cacao_pass.OnResize(w, h);
-		rtao_pass.OnResize(w, h);
-
+		ambient_occlusion_manager.OnResize(w, h);
 		for (Uint32 i = 0; i < PostEffectType_Upscaler; ++i)
 		{
 			post_effects[i]->OnResize(w, h);
@@ -166,8 +137,7 @@ namespace adria
 
 	void PostProcessor::OnSceneInitialized()
 	{
-		ssao_pass.OnSceneInitialized();
-		hbao_pass.OnSceneInitialized();
+		ambient_occlusion_manager.OnSceneInitialized();
 		for (auto& post_effect : post_effects)
 		{
 			post_effect->OnSceneInitialized();
@@ -192,6 +162,11 @@ namespace adria
 	Bool PostProcessor::IsPathTracing() const
 	{
 		return is_path_tracing_path;
+	}
+
+	Bool PostProcessor::NeedsJitter() const
+	{
+		return HasTAA() || (HasUpscaler() && GetPostEffect<UpscalerPassGroup>()->NeedsJitter());
 	}
 
 	Bool PostProcessor::NeedsVelocityBuffer() const

@@ -23,6 +23,7 @@ struct MSToPS
 	float3 BitangentWS  : BITANGENT;
 	float3 NormalWS     : NORMAL1;
 	uint   MeshletIndex : TEX1;
+	uint   CandidateMeshletIndex : TEX2;
 };
 
 MSToPS GetVertex(Mesh mesh, Instance instance, uint vertexId)
@@ -68,6 +69,7 @@ void DrawMeshletsMS(
 		uint vertexId = LoadMeshBuffer<uint>(mesh.bufferIdx, mesh.meshletVerticesOffset, meshlet.vertexOffset + i);
 		Verts[i] = GetVertex(mesh, instance, vertexId);
 		Verts[i].MeshletIndex = meshletIndex;
+		Verts[i].CandidateMeshletIndex = candidate.meshletIndex;
 	}
 
 	for (uint j = GroupThreadId; j < meshlet.triangleCount; j += BLOCK_SIZE)
@@ -112,6 +114,17 @@ PSOutput DrawMeshletsPS(MSToPS input)
 	mipLevel = clamp(mipLevel, 0.0f, 5.0f);
 	int mipColorIndex = round(mipLevel);
 	output.DiffuseRT = float4(mipColors[mipColorIndex], 1.0f);
+	return output;
+#endif
+#if MATERIAL_ID
+	const uint materialId = instance.materialIdx;
+	output.DiffuseRT = float4(UintToColor(materialId), 1.0f);
+	return output;
+#endif
+#if MESHLET_ID
+	const uint meshletId = input.CandidateMeshletIndex;
+	float3 meshletIdColor = UintToColor(meshletId);
+	output.DiffuseRT = float4(meshletIdColor, 1.0f);
 	return output;
 #endif
 	float4 albedoColor = albedoTexture.Sample(LinearWrapSampler, input.Uvs) * float4(material.baseColorFactor, 1.0f);

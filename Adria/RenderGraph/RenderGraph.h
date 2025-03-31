@@ -1,8 +1,9 @@
 #pragma once
-#include <array>
 #include "RenderGraphBlackboard.h"
 #include "RenderGraphBuilder.h"
 #include "RenderGraphResourcePool.h"
+#include "RenderGraphEvent.h"
+#include "RenderGraphAllocator.h"
 #include "Graphics/GfxDevice.h"
 
 namespace adria
@@ -12,19 +13,30 @@ namespace adria
 		friend class RenderGraphBuilder;
 		friend class RenderGraphContext;
 
+		struct RenderGraphExecutionContext
+		{
+			GfxDevice* gfx;
+			GfxCommandList* graphics_cmd_list;
+			GfxCommandList* compute_cmd_list;
+			GfxFence* graphics_fence;
+			GfxFence* compute_fence;
+			Uint64 graphics_fence_value;
+			Uint64 compute_fence_value;
+		};
+
 		class DependencyLevel
 		{
 			friend RenderGraph;
 		public:
 
-			explicit DependencyLevel(RenderGraph& rg) : rg(rg) {}
+			DependencyLevel(RenderGraph& rg, Uint32 level_index) : rg(rg), level_index(level_index) {}
 			void AddPass(RenderGraphPassBase* pass);
 			void Setup();
-			void Execute(GfxDevice* gfx, GfxCommandList* cmd_list);
-			void Execute(GfxDevice* gfx, std::span<GfxCommandList*> const& cmd_lists);
+			void Execute(RenderGraphExecutionContext const& exec_ctx);
 
 		private:
 			RenderGraph& rg;
+			Uint32 level_index;
 			std::vector<RenderGraphPassBase*> passes;
 			std::unordered_set<RGTextureId> texture_creates;
 			std::unordered_set<RGTextureId> texture_reads;
@@ -37,26 +49,31 @@ namespace adria
 			std::unordered_set<RGBufferId> buffer_writes;
 			std::unordered_set<RGBufferId> buffer_destroys;
 			std::unordered_map<RGBufferId, GfxResourceState> buffer_state_map;
+
+		private:
+			void PreExecute(GfxCommandList*);
+			void PostExecute(GfxCommandList*);
 		};
 
 	public:
-
-		RenderGraph(RGResourcePool& pool) : pool(pool), gfx(pool.GetDevice()) {}
+		RenderGraph(RGResourcePool& pool) : pool(pool), allocator(128 * 1024), gfx(pool.GetDevice()) {}
 		ADRIA_NONCOPYABLE(RenderGraph)
 		ADRIA_DEFAULT_MOVABLE(RenderGraph)
 		~RenderGraph();
 
-		void Build();
+		void Compile();
 		void Execute();
 
 		template<typename PassData, typename... Args> requires std::is_constructible_v<RenderGraphPass<PassData>, Args...>
 		ADRIA_MAYBE_UNUSED decltype(auto) AddPass(Args&&... args)
 		{
-			passes.emplace_back(std::make_unique<RenderGraphPass<PassData>>(std::forward<Args>(args)...));
-			std::unique_ptr<RGPassBase>& pass = passes.back(); pass->id = passes.size() - 1;
+			passes.emplace_back(allocator.AllocateObject<RenderGraphPass<PassData>>(std::forward<Args>(args)...));
+			RGPassBase*& pass = passes.back(); pass->id = passes.size() - 1;
 			RenderGraphBuilder builder(*this, *pass);
 			pass->Setup(builder);
-			return *dynamic_cast<RenderGraphPass<PassData>*>(pass.get());
+			for (Uint32 event_idx : pending_event_indices) pass->events_to_start.push_back(event_idx);
+			pending_event_indices.clear();
+			return *dynamic_cast<RenderGraphPass<PassData>*>(pass);
 		}
 
 		void ImportTexture(RGResourceName name, GfxTexture* texture);
@@ -68,17 +85,24 @@ namespace adria
 		RGBlackboard const& GetBlackboard() const { return blackboard; }
 		RGBlackboard& GetBlackboard() { return blackboard; }
 
+		void PushEvent(Char const* name);
+		void PopEvent();
+
 		void Dump(Char const* graph_file_name);
 		void DumpDebugData();
 
 	private:
 		RGResourcePool& pool;
 		GfxDevice* gfx;
+		RGAllocator allocator;
 		RGBlackboard blackboard;
 
-		std::vector<std::unique_ptr<RGPassBase>> passes;
+		std::vector<RGPassBase*> passes;
 		std::vector<std::unique_ptr<RGTexture>> textures;
 		std::vector<std::unique_ptr<RGBuffer>> buffers;
+
+		std::vector<RGEvent> events;
+		std::vector<Uint32>  pending_event_indices;
 
 		std::vector<std::vector<Uint64>> adjacency_lists;
 		std::vector<Uint64> topologically_sorted_passes;
@@ -102,6 +126,13 @@ namespace adria
 		void CullPasses();
 		void CalculateResourcesLifetime();
 		void DepthFirstSearch(Uint64 i, std::vector<Bool>& visited, std::vector<Uint64>& sort);
+		void ResolveAsync();
+		void ResolveEvents();
+		Uint32 AddEvent(Char const* name)
+		{
+			events.emplace_back(name);
+			return static_cast<Uint32>(events.size() - 1);
+		}
 		
 		RGTextureId DeclareTexture(RGResourceName name, RGTextureDesc const& desc);
 		RGBufferId DeclareBuffer(RGResourceName name, RGBufferDesc const& desc);

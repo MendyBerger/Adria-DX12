@@ -1,17 +1,4 @@
 #pragma once
-#pragma comment(lib,"d3d12.lib")
-#pragma comment(lib, "dxgi.lib")
-#pragma comment(lib, "dxguid.lib")
-
-#include <memory>
-#include <mutex>
-#include <vector>
-#include <array>
-#include <queue>
-
-#include <d3d12.h>
-#include <dxgi1_6.h>
-
 #define D3D12MA_D3D12_HEADERS_ALREADY_INCLUDED
 #include "D3D12MemAlloc.h"
 
@@ -69,11 +56,8 @@ namespace adria
 	class GfxRingDescriptorAllocator;
 
 	class GfxNsightAftermathGpuCrashTracker;
-#if GFX_MULTITHREADED
-	using GfxOnlineDescriptorAllocator = GfxRingDescriptorAllocator<true>;
-#else
-	using GfxOnlineDescriptorAllocator = GfxRingDescriptorAllocator<false>;
-#endif
+	class GfxNsightPerfManager;
+	using GfxOnlineDescriptorAllocator = GfxRingDescriptorAllocator<GFX_MULTITHREADED>;
 
 	struct GPUMemoryUsage
 	{
@@ -89,43 +73,67 @@ namespace adria
 		Microsoft,
 		Unknown
 	};
+	struct DRED;
 
 	class GfxDevice
 	{
 		friend class GfxCommandList;
+
 	public:
 		explicit GfxDevice(Window* window, IDXGIFactory6* my_factory, ID3D12Device5* my_device, ID3D12CommandQueue* my_queue);
 		ADRIA_NONCOPYABLE(GfxDevice)
 		ADRIA_DEFAULT_MOVABLE(GfxDevice)
 		~GfxDevice();
 
-		void WaitForGPU();
-		
 		void OnResize(Uint32 w, Uint32 h);
+		GfxTexture* GetBackbuffer() const;
 		Uint32 GetBackbufferIndex() const;
 		Uint32 GetFrameIndex() const;
+		constexpr Uint32 GetBackbufferCount() const
+		{
+			return GFX_BACKBUFFER_COUNT;
+		}
 
+		void Update();
 		void BeginFrame();
 		void EndFrame(MyPluginRuntimeRender*  pr_render);
-		void TakePixCapture(Char const* capture_name, Uint32 num_frames);
-
-		void* GetHwnd() const { return hwnd; }
 		IDXGIFactory6* GetFactory() const;
 		ID3D12Device5* GetDevice() const;
+		IDMLDevice* GetDMLDevice() const;
+		IDMLCommandRecorder* GetDMLCommandRecorder() const;
 		ID3D12RootSignature* GetCommonRootSignature() const;
 		D3D12MA::Allocator* GetAllocator() const;
+		void* GetHwnd() const { return hwnd; }
 
 		GfxCapabilities const& GetCapabilities() const { return device_capabilities; }
 		GfxVendor GetVendor() const { return vendor; }
-		GfxCommandQueue& GetCommandQueue(GfxCommandListType type);
 
-		GfxCommandList* GetCommandList() const;
-		GfxCommandList* GetCommandList(GfxCommandListType type) const;
-		GfxCommandList* GetLatestCommandList(GfxCommandListType type) const;
-		GfxCommandList* AllocateCommandList(GfxCommandListType type) const;
-		void			FreeCommandList(GfxCommandList*, GfxCommandListType type);
+		void WaitForGPU();
+		GfxCommandQueue& GetGraphicsCommandQueue();
+		GfxCommandQueue& GetComputeCommandQueue();
+		GfxCommandQueue& GetCopyCommandQueue();
+		GfxFence& GetGraphicsFence() { return graphics_fence; }
+		GfxFence& GetComputeFence() { return compute_fence; }
+		GfxFence& GetCopyFence() { return  copy_fence; }
+		Uint64 GetGraphicsFenceValue() const { return graphics_fence_value; }
+		Uint64 GetComputeFenceValue() const { return compute_fence_value; }
+		Uint64 GetCopyFenceValue() const { return copy_fence_value; }
+		void SetGraphicsFenceValue(Uint64 value) { graphics_fence_value = value; }
+		void SetComputeFenceValue(Uint64 value) { compute_fence_value = value; }
+		void SetCopyFenceValue(Uint64 value) { copy_fence_value = value; }
 
-		GfxTexture* GetBackbuffer() const;
+		GfxCommandList* GetGraphicsCommandList() const;
+		GfxCommandList* GetLatestGraphicsCommandList() const;
+		GfxCommandList* AllocateGraphicsCommandList() const;
+		void			FreeGraphicsCommandList(GfxCommandList*);
+		GfxCommandList* GetComputeCommandList() const;
+		GfxCommandList* GetLatestComputeCommandList() const;
+		GfxCommandList* AllocateComputeCommandList() const;
+		void			FreeComputeCommandList(GfxCommandList*);
+		GfxCommandList* GetCopyCommandList() const;
+		GfxCommandList* GetLatestCopyCommandList() const;
+		GfxCommandList* AllocateCopyCommandList() const;
+		void			FreeCopyCommandList(GfxCommandList*);
 
 		template<Releasable T>
 		void AddToReleaseQueue(T* alloc)
@@ -135,12 +143,16 @@ namespace adria
 
 		GfxDescriptor AllocateDescriptorCPU(GfxDescriptorHeapType);
 		void FreeDescriptorCPU(GfxDescriptor, GfxDescriptorHeapType);
-
 		GfxDescriptor AllocateDescriptorsGPU(Uint32 count = 1);
 		GfxDescriptor GetDescriptorGPU(Uint32 i) const;
 		void InitShaderVisibleAllocator(Uint32 reserve);
-
 		GfxLinearDynamicAllocator* GetDynamicAllocator() const;
+		void CopyDescriptors(Uint32 count, GfxDescriptor dst, GfxDescriptor src, GfxDescriptorHeapType type = GfxDescriptorHeapType::CBV_SRV_UAV);
+		void CopyDescriptors(GfxDescriptor dst, std::span<GfxDescriptor> src_descriptors, GfxDescriptorHeapType type = GfxDescriptorHeapType::CBV_SRV_UAV);
+		void CopyDescriptors(
+			std::span<std::pair<GfxDescriptor, Uint32>> dst_range_starts_and_size,
+			std::span<std::pair<GfxDescriptor, Uint32>> src_range_starts_and_size,
+			GfxDescriptorHeapType type = GfxDescriptorHeapType::CBV_SRV_UAV);
 
 		std::unique_ptr<GfxTexture> CreateBackbufferTexture(GfxTextureDesc const& desc, void* backbuffer);
 		std::unique_ptr<GfxTexture> CreateTexture(GfxTextureDesc const& desc, GfxTextureData const& data);
@@ -153,7 +165,6 @@ namespace adria
 		std::unique_ptr<GfxMeshShaderPipelineState>	CreateMeshShaderPipelineState(GfxMeshShaderPipelineStateDesc const& desc);
 
 		std::unique_ptr<GfxQueryHeap>	   CreateQueryHeap(GfxQueryHeapDesc const& desc);
-
 		std::unique_ptr<GfxRayTracingTLAS> CreateRayTracingTLAS(std::span<GfxRayTracingInstance> instances, GfxRayTracingASFlags flags);
 		std::unique_ptr<GfxRayTracingBLAS> CreateRayTracingBLAS(std::span<GfxRayTracingGeometry> geometries, GfxRayTracingASFlags flags);
 
@@ -166,16 +177,7 @@ namespace adria
 		GfxDescriptor CreateTextureDSV(GfxTexture const*, GfxTextureDescriptorDesc const* = nullptr);
 
 		Uint64 GetLinearBufferSize(GfxTexture const* texture) const;
-
-		void CopyDescriptors(Uint32 count, GfxDescriptor dst, GfxDescriptor src, GfxDescriptorHeapType type = GfxDescriptorHeapType::CBV_SRV_UAV);
-		void CopyDescriptors(GfxDescriptor dst, std::span<GfxDescriptor> src_descriptors, GfxDescriptorHeapType type = GfxDescriptorHeapType::CBV_SRV_UAV);
-		void CopyDescriptors(
-			std::span<std::pair<GfxDescriptor, Uint32>> dst_range_starts_and_size,
-			std::span<std::pair<GfxDescriptor, Uint32>> src_range_starts_and_size,
-			GfxDescriptorHeapType type = GfxDescriptorHeapType::CBV_SRV_UAV);
-
-		void GetTimestampFrequency(Uint64& frequency) const;
-		GPUMemoryUsage GetMemoryUsage() const;
+		Uint64 GetLinearBufferSize(GfxBuffer const*  buffer) const;
 
 		void SetVRSInfo(GfxShadingRateInfo const& info)
 		{
@@ -193,11 +195,10 @@ namespace adria
 
 		void SetRenderingNotStarted();
 		Bool IsFirstFrame() const { return first_frame; }
-
-		static constexpr Uint32 GetBackbufferCount()
-		{
-			return GFX_BACKBUFFER_COUNT;
-		}
+		void GetTimestampFrequency(Uint64& frequency) const;
+		GPUMemoryUsage GetMemoryUsage() const;
+		GfxNsightPerfManager* GetNsightPerfManager() const;
+		void TakePixCapture(Char const* capture_name, Uint32 num_frames);
 
 	private:
 		void* hwnd;
@@ -219,18 +220,21 @@ namespace adria
 		GfxCommandQueue compute_queue;
 		GfxCommandQueue copy_queue;
 
-		std::unique_ptr<GfxGraphicsCommandListPool> graphics_cmd_list_pool[GFX_BACKBUFFER_COUNT];
 		GfxFence	 frame_fence;
 		Uint64		 frame_fence_value = 0;
 		Uint64       frame_fence_values[GFX_BACKBUFFER_COUNT];
 
+		std::unique_ptr<GfxGraphicsCommandListPool> graphics_cmd_list_pool[GFX_BACKBUFFER_COUNT];
+		GfxFence graphics_fence;
+		Uint64   graphics_fence_value = 0;
+
 		std::unique_ptr<GfxComputeCommandListPool> compute_cmd_list_pool[GFX_BACKBUFFER_COUNT];
-		GfxFence async_compute_fence;
-		Uint64 async_compute_fence_value = 0;
+		GfxFence compute_fence;
+		Uint64   compute_fence_value = 0;
 
 		std::unique_ptr<GfxCopyCommandListPool> copy_cmd_list_pool[GFX_BACKBUFFER_COUNT];
-		GfxFence upload_fence;
-		Uint64   upload_fence_value = 0;
+		GfxFence copy_fence;
+		Uint64   copy_fence_value = 0;
 
 		GfxFence     wait_fence;
 		Uint64       wait_fence_value = 1;
@@ -258,25 +262,27 @@ namespace adria
 
 		GfxShadingRateInfo shading_rate_info;
 
-		struct DRED
-		{
-			DRED(GfxDevice* gfx);
-			~DRED();
-
-			GfxFence dred_fence;
-			HANDLE   dred_wait_handle;
-		};
 		std::unique_ptr<DRED> dred;
 		Bool rendering_not_started = true;
 		Bool first_frame = false;
 		Bool pix_dll_loaded = false;
 
 		std::unique_ptr<GfxNsightAftermathGpuCrashTracker> nsight_aftermath;
+		std::unique_ptr<GfxNsightPerfManager> nsight_perf_manager;
+
+		Ref<IDMLDevice>              dml_device;
+		Ref<IDMLCommandRecorder>     dml_command_recorder;
 
 	private:
 		void SetupOptions(Uint32& dxgi_factory_flags);
 		void SetInfoQueue();
 		void CreateCommonRootSignature();
+
+		GfxCommandQueue& GetCommandQueue(GfxCommandListType type);
+		GfxCommandList*  GetCommandList(GfxCommandListType type) const;
+		GfxCommandList*  GetLatestCommandList(GfxCommandListType type) const;
+		GfxCommandList*  AllocateCommandList(GfxCommandListType type) const;
+		void			 FreeCommandList(GfxCommandList*, GfxCommandListType type);
 
 		void ProcessReleaseQueue();
 		GfxOnlineDescriptorAllocator* GetDescriptorAllocator() const;

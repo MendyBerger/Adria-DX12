@@ -1,10 +1,18 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="..\packages\Microsoft.Direct3D.D3D12.1.614.1\build\native\Microsoft.Direct3D.D3D12.props" Condition="Exists('..\packages\Microsoft.Direct3D.D3D12.1.614.1\build\native\Microsoft.Direct3D.D3D12.props')" />
+  <Import Project="..\packages\Microsoft.Direct3D.D3D12.1.615.1\build\native\Microsoft.Direct3D.D3D12.props" Condition="Exists('..\packages\Microsoft.Direct3D.D3D12.1.615.1\build\native\Microsoft.Direct3D.D3D12.props')" />
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
       <Configuration>Debug</Configuration>
       <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Profile|Win32">
+      <Configuration>Profile</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Profile|x64">
+      <Configuration>Profile</Configuration>
+      <Platform>x64</Platform>
     </ProjectConfiguration>
     <ProjectConfiguration Include="Release|Win32">
       <Configuration>Release</Configuration>
@@ -16,6 +24,14 @@
     </ProjectConfiguration>
     <ProjectConfiguration Include="Release|x64">
       <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="RelWithDebInfo|Win32">
+      <Configuration>RelWithDebInfo</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="RelWithDebInfo|x64">
+      <Configuration>RelWithDebInfo</Configuration>
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
@@ -40,6 +56,20 @@
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Profile|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
@@ -47,6 +77,20 @@
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Profile|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v143</PlatformToolset>
@@ -64,10 +108,22 @@
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Profile|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Profile|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
@@ -77,6 +133,12 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Profile|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
     <IncludePath>C:\Code\plugin-runtime\target\x86_64-pc-windows-msvc\release;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
@@ -84,6 +146,12 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
     <IncludePath>C:\Code\plugin-runtime\target\x86_64-pc-windows-msvc\release;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">
+    <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -113,15 +181,47 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Profile|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions);_CRT_SECURE_NO_WARNINGS;_SILENCE_CXX23_ALIGNED_STORAGE_DEPRECATION_WARNING;_SILENCE_CXX20_CISO646_REMOVED_WARNING;TRACY_ENABLE;WIN32_LEAN_AND_MEAN;NOMINMAX;SOLUTION_DIR=LR"($(SolutionDir))"</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions);_CRT_SECURE_NO_WARNINGS;_SILENCE_CXX23_ALIGNED_STORAGE_DEPRECATION_WARNING;_SILENCE_CXX20_CISO646_REMOVED_WARNING;WIN32_LEAN_AND_MEAN;NOMINMAX;SOLUTION_DIR=LR"($(SolutionDir))"</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
-      <AdditionalIncludeDirectories>$(SolutionDir)Adria\;$(SolutionDir)External\d3dx12;$(SolutionDir)External\D3D12MA;$(SolutionDir)External\stb;$(SolutionDir)External\dxc\include\;$(SolutionDir)External\cgltf;$(SolutionDir)External\tinyobjloader;$(SolutionDir)External\FastNoiseLite;$(SolutionDir)External\json;$(SolutionDir)External\entt;$(SolutionDir)External\nfd\include;$(SolutionDir)External\FontAwesome;$(SolutionDir)External\meshoptimizer;$(SolutionDir)External\cereal;$(SolutionDir)External\ImGui;$(SolutionDir)External\Tracy;$(SolutionDir)External\SimpleMath;$(SolutionDir)External\XeSS\inc;$(SolutionDir)External\DLSS\include;$(SolutionDir)External\FidelityFX-SDK\include;$(SolutionDir)External\NVIDIA_Aftermath_SDK\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Adria\;$(SolutionDir)External\d3dx12;$(SolutionDir)External\DirectMLX;$(SolutionDir)External\D3D12MA;$(SolutionDir)External\stb;$(SolutionDir)External\dxc\include\;$(SolutionDir)External\cgltf;$(SolutionDir)External\tinyobjloader;$(SolutionDir)External\FastNoiseLite;$(SolutionDir)External\json;$(SolutionDir)External\entt;$(SolutionDir)External\nfd\include;$(SolutionDir)External\FontAwesome;$(SolutionDir)External\meshoptimizer;$(SolutionDir)External\cereal;$(SolutionDir)External\ImGui;$(SolutionDir)External\Tracy;$(SolutionDir)External\SimpleMath;$(SolutionDir)External\XeSS\inc;$(SolutionDir)External\DLSS\include;$(SolutionDir)External\FidelityFX-SDK\include;$(SolutionDir)External\NVIDIA_Aftermath_SDK\include;$(SolutionDir)External\NvPerf;$(SolutionDir)External\ImPlot;$(SolutionDir)External\oidn-2.3.2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <UseStandardPreprocessor>false</UseStandardPreprocessor>
       <AdditionalOptions>/sdl /w34996 %(AdditionalOptions)</AdditionalOptions>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -135,8 +235,8 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(SolutionDir)External\dxc\lib;$(SolutionDir)External\nfd\lib;$(SolutionDir)External\XeSS\lib;$(SolutionDir)External\DLSS\lib;$(SolutionDir)External\FidelityFX-SDK\lib;$(SolutionDir)External\NVIDIA_Aftermath_SDK\lib;$(SolutionDir)packages\WinPixEventRuntime.1.0.230302001\bin\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>nfd_d.lib;WinPixEventRuntime.lib;%(AdditionalDependencies);libxess.lib;nvsdk_ngx_d_dbg.lib;ffx_dof_x64d.lib;ffx_fsr2_x64d.lib;ffx_fsr3_x64d.lib;ffx_cas_x64d.lib;ffx_backend_dx12_x64d.lib;ffx_cacao_x64d.lib;ffx_frameinterpolation_x64d.lib;ffx_opticalflow_x64d.lib;ffx_fsr3upscaler_x64d.lib;ffx_vrs_x64d.lib;GFSDK_Aftermath_Lib.x64.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)External\dxc\lib;$(SolutionDir)External\nfd\lib;$(SolutionDir)External\XeSS\lib;$(SolutionDir)External\DLSS\lib;$(SolutionDir)External\FidelityFX-SDK\lib;$(SolutionDir)External\NVIDIA_Aftermath_SDK\lib;$(SolutionDir)packages\WinPixEventRuntime.1.0.230302001\bin\x64;$(SolutionDir)External\oidn-2.3.2\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>nfd_d.lib;WinPixEventRuntime.lib;%(AdditionalDependencies);libxess.lib;nvsdk_ngx_d_dbg.lib;ffx_dof_x64d.lib;ffx_fsr2_x64d.lib;ffx_fsr3_x64d.lib;ffx_cas_x64d.lib;ffx_backend_dx12_x64d.lib;ffx_cacao_x64d.lib;ffx_frameinterpolation_x64d.lib;ffx_opticalflow_x64d.lib;ffx_fsr3upscaler_x64d.lib;ffx_vrs_x64d.lib;GFSDK_Aftermath_Lib.x64.lib;OpenImageDenoise.lib;OpenImageDenoise_core.lib</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -145,11 +245,11 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions);_CRT_SECURE_NO_WARNINGS;NOMINMAX;_SILENCE_CXX23_ALIGNED_STORAGE_DEPRECATION_WARNING;_SILENCE_CXX20_CISO646_REMOVED_WARNING;EASTL_USER_DEFINED_ALLOCATOR;TRACY_ENABLE;WIN32_LEAN_AND_MEAN;SOLUTION_DIR=LR"($(SolutionDir))"</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions);_CRT_SECURE_NO_WARNINGS;NOMINMAX;_SILENCE_CXX23_ALIGNED_STORAGE_DEPRECATION_WARNING;_SILENCE_CXX20_CISO646_REMOVED_WARNING;EASTL_USER_DEFINED_ALLOCATOR;WIN32_LEAN_AND_MEAN;SOLUTION_DIR=LR"($(SolutionDir))"</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
-      <AdditionalIncludeDirectories>$(SolutionDir)Adria\;$(SolutionDir)External\d3dx12;$(SolutionDir)External\D3D12MA;$(SolutionDir)External\stb;$(SolutionDir)External\dxc\include\;$(SolutionDir)External\cgltf;$(SolutionDir)External\tinyobjloader;$(SolutionDir)External\FastNoiseLite;$(SolutionDir)External\json;$(SolutionDir)External\entt;$(SolutionDir)External\nfd\include;$(SolutionDir)External\FontAwesome;$(SolutionDir)External\meshoptimizer;$(SolutionDir)External\cereal;$(SolutionDir)External\ImGui;$(SolutionDir)External\Tracy;$(SolutionDir)External\SimpleMath;$(SolutionDir)External\XeSS\inc;$(SolutionDir)External\DLSS\include;$(SolutionDir)External\FidelityFX-SDK\include;$(SolutionDir)External\NVIDIA_Aftermath_SDK\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Adria\;$(SolutionDir)External\d3dx12;$(SolutionDir)External\DirectMLX;$(SolutionDir)External\D3D12MA;$(SolutionDir)External\stb;$(SolutionDir)External\dxc\include\;$(SolutionDir)External\cgltf;$(SolutionDir)External\tinyobjloader;$(SolutionDir)External\FastNoiseLite;$(SolutionDir)External\json;$(SolutionDir)External\entt;$(SolutionDir)External\nfd\include;$(SolutionDir)External\FontAwesome;$(SolutionDir)External\meshoptimizer;$(SolutionDir)External\cereal;$(SolutionDir)External\ImGui;$(SolutionDir)External\Tracy;$(SolutionDir)External\SimpleMath;$(SolutionDir)External\XeSS\inc;$(SolutionDir)External\DLSS\include;$(SolutionDir)External\FidelityFX-SDK\include;$(SolutionDir)External\NVIDIA_Aftermath_SDK\include;$(SolutionDir)External\NvPerf;$(SolutionDir)External\ImPlot;$(SolutionDir)External\oidn-2.3.2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <UseStandardPreprocessor>false</UseStandardPreprocessor>
       <AdditionalOptions>/sdl /w34996 %(AdditionalOptions)</AdditionalOptions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
@@ -165,20 +265,85 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>false</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(SolutionDir)External\dxc\lib;$(SolutionDir)External\nfd\lib;$(SolutionDir)External\XeSS\lib;$(SolutionDir)External\DLSS\lib;$(SolutionDir)External\FidelityFX-SDK\lib;$(SolutionDir)External\NVIDIA_Aftermath_SDK\lib;$(SolutionDir)packages\WinPixEventRuntime.1.0.230302001\bin\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)External\dxc\lib;$(SolutionDir)External\nfd\lib;$(SolutionDir)External\XeSS\lib;$(SolutionDir)External\DLSS\lib;$(SolutionDir)External\FidelityFX-SDK\lib;$(SolutionDir)External\NVIDIA_Aftermath_SDK\lib;$(SolutionDir)packages\WinPixEventRuntime.1.0.230302001\bin\x64;$(SolutionDir)External\oidn-2.3.2\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <LinkTimeCodeGeneration>UseFastLinkTimeCodeGeneration</LinkTimeCodeGeneration>
-      <AdditionalDependencies>nfd.lib;WinPixEventRuntime.lib;%(AdditionalDependencies);libxess.lib;nvsdk_ngx_d.lib;ffx_dof_x64.lib;ffx_backend_dx12_x64.lib;ffx_fsr2_x64.lib;ffx_fsr3_x64.lib;ffx_cas_x64.lib;ffx_cacao_x64.lib;ffx_frameinterpolation_x64.lib;ffx_opticalflow_x64.lib;ffx_fsr3upscaler_x64.lib;ffx_vrs_x64.lib;GFSDK_Aftermath_Lib.x64.lib</AdditionalDependencies>
+      <AdditionalDependencies>nfd.lib;WinPixEventRuntime.lib;%(AdditionalDependencies);libxess.lib;nvsdk_ngx_d.lib;ffx_dof_x64.lib;ffx_backend_dx12_x64.lib;ffx_fsr2_x64.lib;ffx_fsr3_x64.lib;ffx_cas_x64.lib;ffx_cacao_x64.lib;ffx_frameinterpolation_x64.lib;ffx_opticalflow_x64.lib;ffx_fsr3upscaler_x64.lib;ffx_vrs_x64.lib;GFSDK_Aftermath_Lib.x64.lib;OpenImageDenoise.lib;OpenImageDenoise_core.lib</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions);_CRT_SECURE_NO_WARNINGS;NOMINMAX;_SILENCE_CXX23_ALIGNED_STORAGE_DEPRECATION_WARNING;_SILENCE_CXX20_CISO646_REMOVED_WARNING;EASTL_USER_DEFINED_ALLOCATOR;WIN32_LEAN_AND_MEAN;SOLUTION_DIR=LR"($(SolutionDir))"</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <AdditionalIncludeDirectories>$(SolutionDir)Adria\;$(SolutionDir)External\d3dx12;$(SolutionDir)External\DirectMLX;$(SolutionDir)External\D3D12MA;$(SolutionDir)External\stb;$(SolutionDir)External\dxc\include\;$(SolutionDir)External\cgltf;$(SolutionDir)External\tinyobjloader;$(SolutionDir)External\FastNoiseLite;$(SolutionDir)External\json;$(SolutionDir)External\entt;$(SolutionDir)External\nfd\include;$(SolutionDir)External\FontAwesome;$(SolutionDir)External\meshoptimizer;$(SolutionDir)External\cereal;$(SolutionDir)External\ImGui;$(SolutionDir)External\Tracy;$(SolutionDir)External\SimpleMath;$(SolutionDir)External\XeSS\inc;$(SolutionDir)External\DLSS\include;$(SolutionDir)External\FidelityFX-SDK\include;$(SolutionDir)External\NVIDIA_Aftermath_SDK\include;$(SolutionDir)External\NvPerf;$(SolutionDir)External\ImPlot;$(SolutionDir)External\oidn-2.3.2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <UseStandardPreprocessor>false</UseStandardPreprocessor>
+      <AdditionalOptions>/sdl /w34996 %(AdditionalOptions)</AdditionalOptions>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <WholeProgramOptimization>false</WholeProgramOptimization>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>precomp.h</PrecompiledHeaderFile>
+      <ForcedIncludeFiles>precomp.h;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <Optimization>MaxSpeed</Optimization>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>$(SolutionDir)External\dxc\lib;$(SolutionDir)External\nfd\lib;$(SolutionDir)External\XeSS\lib;$(SolutionDir)External\DLSS\lib;$(SolutionDir)External\FidelityFX-SDK\lib;$(SolutionDir)External\NVIDIA_Aftermath_SDK\lib;$(SolutionDir)packages\WinPixEventRuntime.1.0.230302001\bin\x64;$(SolutionDir)External\oidn-2.3.2\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <LinkTimeCodeGeneration>UseFastLinkTimeCodeGeneration</LinkTimeCodeGeneration>
+      <AdditionalDependencies>nfd.lib;WinPixEventRuntime.lib;%(AdditionalDependencies);libxess.lib;nvsdk_ngx_d.lib;ffx_dof_x64.lib;ffx_backend_dx12_x64.lib;ffx_fsr2_x64.lib;ffx_fsr3_x64.lib;ffx_cas_x64.lib;ffx_cacao_x64.lib;ffx_frameinterpolation_x64.lib;ffx_opticalflow_x64.lib;ffx_fsr3upscaler_x64.lib;ffx_vrs_x64.lib;GFSDK_Aftermath_Lib.x64.lib;OpenImageDenoise.lib;OpenImageDenoise_core.lib</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions);_CRT_SECURE_NO_WARNINGS;NOMINMAX;_SILENCE_CXX23_ALIGNED_STORAGE_DEPRECATION_WARNING;_SILENCE_CXX20_CISO646_REMOVED_WARNING;EASTL_USER_DEFINED_ALLOCATOR;WIN32_LEAN_AND_MEAN;SOLUTION_DIR=LR"($(SolutionDir))";GFX_PROFILING=1;TRACY_ENABLE</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <AdditionalIncludeDirectories>$(SolutionDir)Adria\;$(SolutionDir)External\d3dx12;$(SolutionDir)External\DirectMLX;$(SolutionDir)External\D3D12MA;$(SolutionDir)External\stb;$(SolutionDir)External\dxc\include\;$(SolutionDir)External\cgltf;$(SolutionDir)External\tinyobjloader;$(SolutionDir)External\FastNoiseLite;$(SolutionDir)External\json;$(SolutionDir)External\entt;$(SolutionDir)External\nfd\include;$(SolutionDir)External\FontAwesome;$(SolutionDir)External\meshoptimizer;$(SolutionDir)External\cereal;$(SolutionDir)External\ImGui;$(SolutionDir)External\Tracy;$(SolutionDir)External\SimpleMath;$(SolutionDir)External\XeSS\inc;$(SolutionDir)External\DLSS\include;$(SolutionDir)External\FidelityFX-SDK\include;$(SolutionDir)External\NVIDIA_Aftermath_SDK\include;$(SolutionDir)External\NvPerf;$(SolutionDir)External\ImPlot;$(SolutionDir)External\oidn-2.3.2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <UseStandardPreprocessor>false</UseStandardPreprocessor>
+      <AdditionalOptions>/sdl /w34996 %(AdditionalOptions)</AdditionalOptions>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <WholeProgramOptimization>false</WholeProgramOptimization>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>precomp.h</PrecompiledHeaderFile>
+      <ForcedIncludeFiles>precomp.h;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <Optimization>MaxSpeed</Optimization>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>$(SolutionDir)External\dxc\lib;$(SolutionDir)External\nfd\lib;$(SolutionDir)External\XeSS\lib;$(SolutionDir)External\DLSS\lib;$(SolutionDir)External\FidelityFX-SDK\lib;$(SolutionDir)External\NVIDIA_Aftermath_SDK\lib;$(SolutionDir)packages\WinPixEventRuntime.1.0.230302001\bin\x64;$(SolutionDir)External\oidn-2.3.2\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <LinkTimeCodeGeneration>UseFastLinkTimeCodeGeneration</LinkTimeCodeGeneration>
+      <AdditionalDependencies>nfd.lib;WinPixEventRuntime.lib;%(AdditionalDependencies);libxess.lib;nvsdk_ngx_d.lib;ffx_dof_x64.lib;ffx_backend_dx12_x64.lib;ffx_fsr2_x64.lib;ffx_fsr3_x64.lib;ffx_cas_x64.lib;ffx_cacao_x64.lib;ffx_frameinterpolation_x64.lib;ffx_opticalflow_x64.lib;ffx_fsr3upscaler_x64.lib;ffx_vrs_x64.lib;GFSDK_Aftermath_Lib.x64.lib;OpenImageDenoise.lib;OpenImageDenoise_core.lib</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\External\D3D12MA\D3D12MemAlloc.cpp" />
-    <ClCompile Include="..\External\ImGui\ImGui\imgui.cpp" />
-    <ClCompile Include="..\External\ImGui\ImGui\imgui_demo.cpp" />
-    <ClCompile Include="..\External\ImGui\ImGui\imgui_draw.cpp" />
-    <ClCompile Include="..\External\ImGui\ImGui\imgui_impl_dx12.cpp" />
-    <ClCompile Include="..\External\ImGui\ImGui\imgui_impl_win32.cpp" />
-    <ClCompile Include="..\External\ImGui\ImGui\imgui_tables.cpp" />
-    <ClCompile Include="..\External\ImGui\ImGui\imgui_widgets.cpp" />
+    <ClCompile Include="..\External\ImGui\imgui.cpp" />
+    <ClCompile Include="..\External\ImGui\imgui_demo.cpp" />
+    <ClCompile Include="..\External\ImGui\imgui_draw.cpp" />
+    <ClCompile Include="..\External\ImGui\imgui_impl_dx12.cpp" />
+    <ClCompile Include="..\External\ImGui\imgui_impl_win32.cpp" />
+    <ClCompile Include="..\External\ImGui\imgui_tables.cpp" />
+    <ClCompile Include="..\External\ImGui\imgui_widgets.cpp" />
+    <ClCompile Include="..\External\ImPlot\implot.cpp" />
+    <ClCompile Include="..\External\ImPlot\implot_demo.cpp" />
+    <ClCompile Include="..\External\ImPlot\implot_items.cpp" />
     <ClCompile Include="..\External\meshoptimizer\allocator.cpp" />
     <ClCompile Include="..\External\meshoptimizer\clusterizer.cpp" />
     <ClCompile Include="..\External\meshoptimizer\indexcodec.cpp" />
@@ -200,6 +365,10 @@
     <ClCompile Include="Core\ConsoleManager.cpp" />
     <ClCompile Include="Core\Engine.cpp" />
     <ClCompile Include="Core\Input.cpp" />
+    <ClCompile Include="Core\Log.cpp" />
+    <ClCompile Include="Core\Loggers\FileLogger.cpp" />
+    <ClCompile Include="Core\Loggers\OutputDebugStringLogger.cpp" />
+    <ClCompile Include="Core\Loggers\OutputStreamLogger.cpp" />
     <ClCompile Include="Core\Paths.cpp" />
     <ClCompile Include="Core\Window.cpp" />
     <ClCompile Include="Editor\Editor.cpp" />
@@ -223,6 +392,7 @@
     <ClCompile Include="Graphics\GfxRayTracingAS.cpp" />
     <ClCompile Include="Graphics\GfxRayTracingShaderTable.cpp" />
     <ClCompile Include="Graphics\GfxReflection.cpp" />
+    <ClCompile Include="Graphics\GfxScopedEvent.cpp" />
     <ClCompile Include="Graphics\GfxShaderKey.cpp" />
     <ClCompile Include="Graphics\GfxStateObject.cpp" />
     <ClCompile Include="Graphics\GfxSwapchain.cpp" />
@@ -233,31 +403,40 @@
     <ClCompile Include="Graphics\GfxRingDynamicAllocator.cpp" />
     <ClCompile Include="Graphics\GfxShaderCompiler.cpp" />
     <ClCompile Include="Graphics\GfxTracyProfiler.cpp" />
-    <ClCompile Include="Logging\FileLogger.cpp" />
-    <ClCompile Include="Logging\Logger.cpp" />
-    <ClCompile Include="Logging\OutputDebugStringLogger.cpp" />
-    <ClCompile Include="Logging\OutputStreamLogger.cpp" />
     <ClCompile Include="my.cpp" />
+    <ClCompile Include="Graphics\GfxNsightPerfManager.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Math\Packing.cpp" />
     <ClCompile Include="precomp.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="RenderGraph\RenderGraph.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">false</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="RenderGraph\RenderGraphBuilder.cpp" />
     <ClCompile Include="RenderGraph\RenderGraphContext.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">false</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="RenderGraph\RenderGraphEvent.cpp" />
+    <ClCompile Include="Rendering\AmbientOcclusionManager.cpp" />
     <ClCompile Include="Rendering\DepthOfFieldPass.cpp" />
     <ClCompile Include="Rendering\DepthOfFieldPassGroup.cpp" />
+    <ClCompile Include="Rendering\DirectMLDenoiserPass.cpp" />
+    <ClCompile Include="Rendering\DirectMLPassBase.cpp" />
+    <ClCompile Include="Rendering\DirectMLUpscalerPass.cpp" />
     <ClCompile Include="Rendering\FFXVRSPass.cpp" />
+    <ClCompile Include="Rendering\OIDNDenoiserPass.cpp" />
     <ClCompile Include="Rendering\ReflectionPassGroup.cpp" />
-    <ClCompile Include="Rendering\RendererOutputPass.cpp" />
+    <ClCompile Include="Rendering\RendererDebugViewPass.cpp" />
     <ClCompile Include="Rendering\FilmEffectsPass.cpp" />
     <ClCompile Include="Rendering\FFXCACAOPass.cpp" />
     <ClCompile Include="Rendering\FFXCASPass.cpp" />
@@ -313,11 +492,13 @@
     <ClCompile Include="Rendering\TiledDeferredLightingPass.cpp" />
     <ClCompile Include="Rendering\ToneMapPass.cpp" />
     <ClCompile Include="Rendering\MotionVectorsPass.cpp" />
+    <ClCompile Include="Rendering\TransparentPass.cpp" />
     <ClCompile Include="Rendering\UpscalerPassGroup.cpp" />
     <ClCompile Include="Rendering\VolumetricCloudsPass.cpp" />
-    <ClCompile Include="Rendering\VolumetricFogPass.cpp" />
-    <ClCompile Include="Rendering\VolumetricLightingPass.cpp" />
-    <ClCompile Include="Rendering\XeSSPass.cpp" />
+    <ClCompile Include="Rendering\VolumetricFogManager.cpp" />
+    <ClCompile Include="Rendering\FogVolumesPass.cpp" />
+    <ClCompile Include="Rendering\RayMarchedVolumetricFogPass.cpp" />
+    <ClCompile Include="Rendering\XeSS2Pass.cpp" />
     <ClCompile Include="Utilities\CLIParser.cpp" />
     <ClCompile Include="Utilities\FilesUtil.cpp" />
     <ClCompile Include="Utilities\Heightmap.cpp" />
@@ -412,21 +593,85 @@
     <ClInclude Include="..\External\FidelityFX-SDK\include\FidelityFX\host\ffx_util.h" />
     <ClInclude Include="..\External\FidelityFX-SDK\include\FidelityFX\host\ffx_vrs.h" />
     <ClInclude Include="..\External\FontAwesome\IconsFontAwesome4.h" />
-    <ClInclude Include="..\External\ImGui\ImGui\imconfig.h" />
-    <ClInclude Include="..\External\ImGui\ImGui\imgui.h" />
-    <ClInclude Include="..\External\ImGui\ImGui\imgui_impl_dx12.h" />
-    <ClInclude Include="..\External\ImGui\ImGui\imgui_impl_win32.h" />
-    <ClInclude Include="..\External\ImGui\ImGui\imgui_internal.h" />
-    <ClInclude Include="..\External\ImGui\ImGui\imstb_rectpack.h" />
-    <ClInclude Include="..\External\ImGui\ImGui\imstb_textedit.h" />
-    <ClInclude Include="..\External\ImGui\ImGui\imstb_truetype.h" />
+    <ClInclude Include="..\External\ImGui\imconfig.h" />
+    <ClInclude Include="..\External\ImGui\imgui.h" />
+    <ClInclude Include="..\External\ImGui\imgui_impl_dx12.h" />
+    <ClInclude Include="..\External\ImGui\imgui_impl_win32.h" />
+    <ClInclude Include="..\External\ImGui\imgui_internal.h" />
+    <ClInclude Include="..\External\ImGui\imstb_rectpack.h" />
+    <ClInclude Include="..\External\ImGui\imstb_textedit.h" />
+    <ClInclude Include="..\External\ImGui\imstb_truetype.h" />
+    <ClInclude Include="..\External\ImPlot\implot.h" />
+    <ClInclude Include="..\External\ImPlot\implot_internal.h" />
     <ClInclude Include="..\External\meshoptimizer\meshoptimizer.h" />
+    <ClInclude Include="..\External\NvPerf\NvPerfUtility\include\NvPerfCommonHtmlTemplates.h" />
+    <ClInclude Include="..\External\NvPerf\NvPerfUtility\include\NvPerfCounterConfiguration.h" />
+    <ClInclude Include="..\External\NvPerf\NvPerfUtility\include\NvPerfCounterData.h" />
+    <ClInclude Include="..\External\NvPerf\NvPerfUtility\include\NvPerfCpuMarkerTrace.h" />
+    <ClInclude Include="..\External\NvPerf\NvPerfUtility\include\NvPerfD3D.h" />
+    <ClInclude Include="..\External\NvPerf\NvPerfUtility\include\NvPerfD3D11.h" />
+    <ClInclude Include="..\External\NvPerf\NvPerfUtility\include\NvPerfD3D12.h" />
+    <ClInclude Include="..\External\NvPerf\NvPerfUtility\include\NvPerfDeviceProperties.h" />
+    <ClInclude Include="..\External\NvPerf\NvPerfUtility\include\NvPerfHudConfigurationsAD10X.h" />
+    <ClInclude Include="..\External\NvPerf\NvPerfUtility\include\NvPerfHudConfigurationsGA10B.h" />
+    <ClInclude Include="..\External\NvPerf\NvPerfUtility\include\NvPerfHudConfigurationsGA10X.h" />
+    <ClInclude Include="..\External\NvPerf\NvPerfUtility\include\NvPerfHudConfigurationsGB10B.h" />
+    <ClInclude Include="..\External\NvPerf\NvPerfUtility\include\NvPerfHudConfigurationsGB20X.h" />
+    <ClInclude Include="..\External\NvPerf\NvPerfUtility\include\NvPerfHudConfigurationsHAL.h" />
+    <ClInclude Include="..\External\NvPerf\NvPerfUtility\include\NvPerfHudConfigurationsTU10X.h" />
+    <ClInclude Include="..\External\NvPerf\NvPerfUtility\include\NvPerfHudConfigurationsTU11X.h" />
+    <ClInclude Include="..\External\NvPerf\NvPerfUtility\include\NvPerfHudDataModel.h" />
+    <ClInclude Include="..\External\NvPerf\NvPerfUtility\include\NvPerfHudImPlotRenderer.h" />
+    <ClInclude Include="..\External\NvPerf\NvPerfUtility\include\NvPerfHudRenderer.h" />
+    <ClInclude Include="..\External\NvPerf\NvPerfUtility\include\NvPerfHudTextRenderer.h" />
+    <ClInclude Include="..\External\NvPerf\NvPerfUtility\include\NvPerfInit.h" />
+    <ClInclude Include="..\External\NvPerf\NvPerfUtility\include\NvPerfMetricConfigurationsAD10X.h" />
+    <ClInclude Include="..\External\NvPerf\NvPerfUtility\include\NvPerfMetricConfigurationsGA10X.h" />
+    <ClInclude Include="..\External\NvPerf\NvPerfUtility\include\NvPerfMetricConfigurationsGB20X.h" />
+    <ClInclude Include="..\External\NvPerf\NvPerfUtility\include\NvPerfMetricConfigurationsHAL.h" />
+    <ClInclude Include="..\External\NvPerf\NvPerfUtility\include\NvPerfMetricConfigurationsTU10X.h" />
+    <ClInclude Include="..\External\NvPerf\NvPerfUtility\include\NvPerfMetricsConfigBuilder.h" />
+    <ClInclude Include="..\External\NvPerf\NvPerfUtility\include\NvPerfMetricsConfigLoader.h" />
+    <ClInclude Include="..\External\NvPerf\NvPerfUtility\include\NvPerfMetricsEvaluator.h" />
+    <ClInclude Include="..\External\NvPerf\NvPerfUtility\include\NvPerfMiniTrace.h" />
+    <ClInclude Include="..\External\NvPerf\NvPerfUtility\include\NvPerfMiniTraceD3D12.h" />
+    <ClInclude Include="..\External\NvPerf\NvPerfUtility\include\NvPerfPeriodicSamplerCommon.h" />
+    <ClInclude Include="..\External\NvPerf\NvPerfUtility\include\NvPerfPeriodicSamplerD3D12.h" />
+    <ClInclude Include="..\External\NvPerf\NvPerfUtility\include\NvPerfPeriodicSamplerGpu.h" />
+    <ClInclude Include="..\External\NvPerf\NvPerfUtility\include\NvPerfRangeProfiler.h" />
+    <ClInclude Include="..\External\NvPerf\NvPerfUtility\include\NvPerfRangeProfilerD3D12.h" />
+    <ClInclude Include="..\External\NvPerf\NvPerfUtility\include\NvPerfReportDefinition.h" />
+    <ClInclude Include="..\External\NvPerf\NvPerfUtility\include\NvPerfReportDefinitionAD10X.h" />
+    <ClInclude Include="..\External\NvPerf\NvPerfUtility\include\NvPerfReportDefinitionGA10B.h" />
+    <ClInclude Include="..\External\NvPerf\NvPerfUtility\include\NvPerfReportDefinitionGA10X.h" />
+    <ClInclude Include="..\External\NvPerf\NvPerfUtility\include\NvPerfReportDefinitionGB10B.h" />
+    <ClInclude Include="..\External\NvPerf\NvPerfUtility\include\NvPerfReportDefinitionGB20X.h" />
+    <ClInclude Include="..\External\NvPerf\NvPerfUtility\include\NvPerfReportDefinitionHAL.h" />
+    <ClInclude Include="..\External\NvPerf\NvPerfUtility\include\NvPerfReportDefinitionTU10X.h" />
+    <ClInclude Include="..\External\NvPerf\NvPerfUtility\include\NvPerfReportDefinitionTU11X.h" />
+    <ClInclude Include="..\External\NvPerf\NvPerfUtility\include\NvPerfReportGenerator.h" />
+    <ClInclude Include="..\External\NvPerf\NvPerfUtility\include\NvPerfReportGeneratorD3D12.h" />
+    <ClInclude Include="..\External\NvPerf\NvPerfUtility\include\NvPerfScopeExitGuard.h" />
+    <ClInclude Include="..\External\NvPerf\NvPerfUtility\include\NvPerfUtilities.h" />
+    <ClInclude Include="..\External\NvPerf\nvperf_common.h" />
+    <ClInclude Include="..\External\NvPerf\nvperf_d3d12_host.h" />
+    <ClInclude Include="..\External\NvPerf\nvperf_d3d12_target.h" />
+    <ClInclude Include="..\External\NvPerf\nvperf_device_host.h" />
+    <ClInclude Include="..\External\NvPerf\nvperf_device_target.h" />
+    <ClInclude Include="..\External\NvPerf\nvperf_host.h" />
+    <ClInclude Include="..\External\NvPerf\nvperf_host_impl.h" />
+    <ClInclude Include="..\External\NvPerf\nvperf_target.h" />
+    <ClInclude Include="..\External\NvPerf\nvperf_versions_target.h" />
     <ClInclude Include="..\External\SimpleMath\SimpleMath.h" />
     <ClInclude Include="..\External\tracy\tracy\Tracy.hpp" />
     <ClInclude Include="..\External\tracy\tracy\TracyD3D12.hpp" />
     <ClInclude Include="Core\CommandLineOptions.h" />
     <ClInclude Include="Core\ConsoleManager.h" />
     <ClInclude Include="Core\IConsoleManager.h" />
+    <ClInclude Include="Core\Log.h" />
+    <ClInclude Include="Core\Loggers\FileLogger.h" />
+    <ClInclude Include="Core\Loggers\OutputDebugStringLogger.h" />
+    <ClInclude Include="Core\Loggers\OutputStreamLogger.h" />
     <ClInclude Include="Core\Types.h" />
     <ClInclude Include="Core\Engine.h" />
     <ClInclude Include="Core\Macros.h" />
@@ -451,6 +696,8 @@
     <ClInclude Include="Graphics\GfxDescriptor.h" />
     <ClInclude Include="Graphics\GfxDescriptorAllocator.h" />
     <ClInclude Include="Graphics\GfxDescriptorAllocatorBase.h" />
+    <ClInclude Include="Graphics\GfxProfilerFwd.h" />
+    <ClInclude Include="Graphics\GfxScopedEvent.h" />
     <ClInclude Include="Graphics\GfxFence.h" />
     <ClInclude Include="Graphics\GfxFormat.h" />
     <ClInclude Include="Graphics\GfxNsightAftermathGpuCrashTracker.h" />
@@ -482,10 +729,7 @@
     <ClInclude Include="Graphics\GfxShaderCompiler.h" />
     <ClInclude Include="Graphics\GfxTracyProfiler.h" />
     <ClInclude Include="Graphics\GfxVertexFormat.h" />
-    <ClInclude Include="Logging\FileLogger.h" />
-    <ClInclude Include="Logging\Logger.h" />
-    <ClInclude Include="Logging\OutputDebugStringLogger.h" />
-    <ClInclude Include="Logging\OutputStreamLogger.h" />
+    <ClInclude Include="Graphics\GfxNsightPerfManager.h" />
     <ClInclude Include="Math\BoundingVolumeUtil.h" />
     <ClInclude Include="Math\MathCommon.h" />
     <ClInclude Include="Math\NormalsUtil.h" />
@@ -497,15 +741,23 @@
     <ClInclude Include="RenderGraph\RenderGraph.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">false</ExcludedFromBuild>
     </ClInclude>
+    <ClInclude Include="RenderGraph\RenderGraphAllocator.h" />
     <ClInclude Include="RenderGraph\RenderGraphBlackboard.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">false</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="RenderGraph\RenderGraphBuilder.h" />
+    <ClInclude Include="RenderGraph\RenderGraphEvent.h" />
     <ClInclude Include="RenderGraph\RenderGraphPass.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">false</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="RenderGraph\RenderGraphResourceId.h" />
     <ClInclude Include="RenderGraph\RenderGraphResourceName.h" />
@@ -513,15 +765,23 @@
     <ClInclude Include="RenderGraph\RenderGraphContext.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">false</ExcludedFromBuild>
     </ClInclude>
+    <ClInclude Include="Rendering\AmbientOcclusionManager.h" />
     <ClInclude Include="Rendering\DepthOfFieldPass.h" />
+    <ClInclude Include="Rendering\DirectMLDenoiserPass.h" />
+    <ClInclude Include="Rendering\DirectMLPassBase.h" />
+    <ClInclude Include="Rendering\DirectMLUpscalerPass.h" />
     <ClInclude Include="Rendering\FFXVRSPass.h" />
+    <ClInclude Include="Rendering\OIDNDenoiserPass.h" />
     <ClInclude Include="Rendering\SceneConfig.h" />
+    <ClInclude Include="Rendering\TransparentPass.h" />
     <ClInclude Include="Rendering\UpscalerPass.h" />
     <ClInclude Include="Rendering\DepthOfFieldPassGroup.h" />
     <ClInclude Include="Rendering\PostEffect.h" />
     <ClInclude Include="Rendering\ReflectionPassGroup.h" />
-    <ClInclude Include="Rendering\RendererOutputPass.h" />
+    <ClInclude Include="Rendering\RendererDebugViewPass.h" />
     <ClInclude Include="Rendering\FilmEffectsPass.h" />
     <ClInclude Include="Rendering\FFXCACAOPass.h" />
     <ClInclude Include="Rendering\FFXCASPass.h" />
@@ -583,13 +843,16 @@
     <ClInclude Include="Rendering\TiledDeferredLightingPass.h" />
     <ClInclude Include="Rendering\ToneMapPass.h" />
     <ClInclude Include="Rendering\VolumetricCloudsPass.h" />
-    <ClInclude Include="Rendering\VolumetricFogPass.h" />
-    <ClInclude Include="Rendering\VolumetricLightingPass.h" />
-    <ClInclude Include="Rendering\XeSSPass.h" />
+    <ClInclude Include="Rendering\VolumetricFogManager.h" />
+    <ClInclude Include="Rendering\FogVolumesPass.h" />
+    <ClInclude Include="Rendering\RayMarchedVolumetricFogPass.h" />
+    <ClInclude Include="Rendering\XeSS2Pass.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="Resources\Shaders\SPD\ffx_a.h" />
     <ClInclude Include="Resources\Shaders\SPD\ffx_spd.h" />
     <ClInclude Include="Utilities\AllocatorUtil.h" />
+    <ClInclude Include="Utilities\FloatCompressor.h" />
+    <ClInclude Include="Utilities\LinearAllocator.h" />
     <ClInclude Include="Utilities\Ref.h" />
     <ClInclude Include="Utilities\CLIParser.h" />
     <ClInclude Include="Utilities\Delegate.h" />
@@ -601,9 +864,9 @@
     <ClInclude Include="Utilities\hwbp.h" />
     <ClInclude Include="Utilities\ImageWrite.h" />
     <ClInclude Include="Utilities\JsonUtil.h" />
-    <ClInclude Include="Utilities\LinearAllocator.h" />
+    <ClInclude Include="Utilities\LinearOffsetAllocator.h" />
     <ClInclude Include="Utilities\Releasable.h" />
-    <ClInclude Include="Utilities\RingAllocator.h" />
+    <ClInclude Include="Utilities\RingOffsetAllocator.h" />
     <ClInclude Include="Utilities\RingBuffer.h" />
     <ClInclude Include="Utilities\ConcurrentQueue.h" />
     <ClInclude Include="Utilities\HashUtil.h" />
@@ -615,6 +878,7 @@
     <ClInclude Include="Utilities\TemplatesUtil.h" />
     <ClInclude Include="Utilities\ThreadPool.h" />
     <ClInclude Include="Utilities\Timer.h" />
+    <ClInclude Include="Utilities\Tree.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Adria.rc" />
@@ -625,6 +889,9 @@
   <ItemGroup>
     <None Include="..\.gitignore" />
     <None Include="..\External\cgltf\LICENSE" />
+    <None Include="..\External\ImPlot\LICENSE" />
+    <None Include="..\External\ImPlot\README.md" />
+    <None Include="..\External\ImPlot\TODO.md" />
     <None Include="..\External\SimpleMath\SimpleMath.inl" />
     <None Include="..\README.md" />
     <None Include="packages.config" />
@@ -636,18 +903,21 @@
     <None Include="Resources\Shaders\DDGI\DDGICommon.hlsli" />
     <None Include="Resources\Shaders\DebugPrint.hlsli" />
     <None Include="Resources\Shaders\DitherUtil.hlsli" />
+    <None Include="Resources\Shaders\LightInfo.hlsli" />
     <None Include="Resources\Shaders\Lighting.hlsli" />
     <None Include="Resources\Shaders\Meshlets\GpuDrivenRendering.hlsli" />
     <None Include="Resources\Shaders\Noise.hlsli" />
     <None Include="Resources\Shaders\Packing.hlsli" />
     <None Include="Resources\Shaders\Postprocess\AutoExposure\ExposureUtil.hlsli" />
+    <None Include="Resources\Shaders\Postprocess\SSRCommon.hlsli" />
     <None Include="Resources\Shaders\Primitives.hlsli" />
     <None Include="Resources\Shaders\Random.hlsli" />
     <None Include="Resources\Shaders\RayTracing\PathTracing.hlsli" />
     <None Include="Resources\Shaders\RayTracing\RayTracingUtil.hlsli" />
-    <None Include="Resources\Shaders\Reflections.hlsli" />
-    <None Include="Resources\Shaders\ReSTIR\ReSTIRUtil.hlsli" />
+    <None Include="Resources\Shaders\ReSTIR\DI\ReSTIR_DI_Util.hlsli" />
+    <None Include="Resources\Shaders\ReSTIR\ReSTIR_Util.hlsli" />
     <None Include="Resources\Shaders\Scene.hlsli" />
+    <None Include="Resources\Shaders\Surface.hlsli" />
     <None Include="Resources\Shaders\Tonemapping.hlsli" />
     <None Include="Resources\Shaders\Weather\RainUtil.hlsli" />
     <None Include="Saved\Ini\default_cvars.ini" />
@@ -666,170 +936,286 @@
     <FxCompile Include="Resources\Shaders\DDGI\DDGIRayTrace.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">true</ExcludedFromBuild>
     </FxCompile>
     <FxCompile Include="Resources\Shaders\DDGI\DDGIUpdateDistance.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">true</ExcludedFromBuild>
     </FxCompile>
     <FxCompile Include="Resources\Shaders\DDGI\DDGIUpdateIrradiance.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">true</ExcludedFromBuild>
     </FxCompile>
     <FxCompile Include="Resources\Shaders\DDGI\DDGIVisualize.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">true</ExcludedFromBuild>
     </FxCompile>
     <FxCompile Include="Resources\Shaders\Lighting\Ambient.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">true</ExcludedFromBuild>
     </FxCompile>
     <FxCompile Include="Resources\Shaders\Lighting\ClusterBuilding.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">true</ExcludedFromBuild>
     </FxCompile>
     <FxCompile Include="Resources\Shaders\Lighting\ClusterCulling.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">true</ExcludedFromBuild>
     </FxCompile>
     <FxCompile Include="Resources\Shaders\Lighting\ClusteredDeferredLighting.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">true</ExcludedFromBuild>
     </FxCompile>
     <FxCompile Include="Resources\Shaders\Lighting\DeferredLighting.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">true</ExcludedFromBuild>
     </FxCompile>
     <FxCompile Include="Resources\Shaders\Lighting\GBuffer.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">true</ExcludedFromBuild>
     </FxCompile>
     <FxCompile Include="Resources\Shaders\Lighting\Shadow.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">true</ExcludedFromBuild>
     </FxCompile>
     <FxCompile Include="Resources\Shaders\Lighting\TiledDeferredLighting.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">true</ExcludedFromBuild>
     </FxCompile>
     <FxCompile Include="Resources\Shaders\Lighting\VolumetricFog.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|Win32'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Profile|Win32'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">Pixel</ShaderType>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">true</ExcludedFromBuild>
     </FxCompile>
     <FxCompile Include="Resources\Shaders\Lighting\VolumetricLighting.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">true</ExcludedFromBuild>
     </FxCompile>
     <FxCompile Include="Resources\Shaders\Meshlets\ClearCounters.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">true</ExcludedFromBuild>
     </FxCompile>
     <FxCompile Include="Resources\Shaders\Meshlets\CullInstances.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">true</ExcludedFromBuild>
     </FxCompile>
     <FxCompile Include="Resources\Shaders\Meshlets\CullMeshlets.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">true</ExcludedFromBuild>
     </FxCompile>
     <FxCompile Include="Resources\Shaders\Meshlets\DrawMeshlets.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">true</ExcludedFromBuild>
     </FxCompile>
     <FxCompile Include="Resources\Shaders\Meshlets\HZB.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">true</ExcludedFromBuild>
     </FxCompile>
     <FxCompile Include="Resources\Shaders\Ocean\FFT.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">true</ExcludedFromBuild>
     </FxCompile>
     <FxCompile Include="Resources\Shaders\Ocean\InitialSpectrum.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">true</ExcludedFromBuild>
     </FxCompile>
     <FxCompile Include="Resources\Shaders\Ocean\Ocean.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">true</ExcludedFromBuild>
     </FxCompile>
     <FxCompile Include="Resources\Shaders\Ocean\OceanLOD.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">true</ExcludedFromBuild>
     </FxCompile>
     <FxCompile Include="Resources\Shaders\Ocean\OceanNormals.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">true</ExcludedFromBuild>
     </FxCompile>
     <FxCompile Include="Resources\Shaders\Ocean\Phase.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">true</ExcludedFromBuild>
     </FxCompile>
     <FxCompile Include="Resources\Shaders\Ocean\Spectrum.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">true</ExcludedFromBuild>
     </FxCompile>
     <FxCompile Include="Resources\Shaders\Other\AddTextures.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">true</ExcludedFromBuild>
     </FxCompile>
     <FxCompile Include="Resources\Shaders\Other\CopyTexture.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">true</ExcludedFromBuild>
     </FxCompile>
     <FxCompile Include="Resources\Shaders\Other\Debug.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">true</ExcludedFromBuild>
     </FxCompile>
     <FxCompile Include="Resources\Shaders\Other\Decals.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </FxCompile>
-    <FxCompile Include="Resources\Shaders\Other\FullscreenTriangle.hlsl">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </FxCompile>
-    <FxCompile Include="Resources\Shaders\Other\GenerateMips.hlsl">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </FxCompile>
-    <FxCompile Include="Resources\Shaders\Other\Picking.hlsl">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </FxCompile>
-    <FxCompile Include="Resources\Shaders\Other\RendererOutput.hlsl">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">true</ExcludedFromBuild>
     </FxCompile>
     <FxCompile Include="Resources\Shaders\Other\Simple.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">true</ExcludedFromBuild>
+    </FxCompile>
+    <FxCompile Include="Resources\Shaders\Other\FullscreenTriangle.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">true</ExcludedFromBuild>
+    </FxCompile>
+    <FxCompile Include="Resources\Shaders\Other\GenerateMips.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">true</ExcludedFromBuild>
+    </FxCompile>
+    <FxCompile Include="Resources\Shaders\Other\Picking.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">true</ExcludedFromBuild>
+    </FxCompile>
+    <FxCompile Include="Resources\Shaders\Other\RendererDebugView.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">true</ExcludedFromBuild>
+    </FxCompile>
+    <FxCompile Include="Resources\Shaders\Other\TensorTextureConversions.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">4.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">4.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Profile|Win32'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Profile|Win32'">4.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|Win32'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|Win32'">4.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">4.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">4.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">4.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">4.0</ShaderModel>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">true</ExcludedFromBuild>
+    </FxCompile>
+    <FxCompile Include="Resources\Shaders\Other\Transparent.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">true</ExcludedFromBuild>
     </FxCompile>
     <FxCompile Include="Resources\Shaders\Other\VRSOverlay.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|Win32'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Profile|Win32'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">Pixel</ShaderType>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">true</ExcludedFromBuild>
     </FxCompile>
     <FxCompile Include="Resources\Shaders\Postprocess\AutoExposure\BuildHistogram.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">true</ExcludedFromBuild>
     </FxCompile>
     <FxCompile Include="Resources\Shaders\Postprocess\AutoExposure\HistogramReduction.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">true</ExcludedFromBuild>
     </FxCompile>
     <FxCompile Include="Resources\Shaders\Postprocess\Bloom.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">true</ExcludedFromBuild>
     </FxCompile>
     <FxCompile Include="Resources\Shaders\Postprocess\Blur.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">true</ExcludedFromBuild>
     </FxCompile>
     <FxCompile Include="Resources\Shaders\Postprocess\DepthOfField\Bokeh.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
@@ -837,11 +1223,21 @@
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Compute</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">4.0</ShaderModel>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Compute</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|Win32'">Compute</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Profile|Win32'">Compute</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">4.0</ShaderModel>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|Win32'">4.0</ShaderModel>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Profile|Win32'">4.0</ShaderModel>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compute</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">Compute</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">Compute</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">4.0</ShaderModel>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">4.0</ShaderModel>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">4.0</ShaderModel>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">true</ExcludedFromBuild>
     </FxCompile>
     <FxCompile Include="Resources\Shaders\Postprocess\DepthOfField\CircleOfConfusion.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
@@ -849,11 +1245,21 @@
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Compute</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">4.0</ShaderModel>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Compute</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|Win32'">Compute</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Profile|Win32'">Compute</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">4.0</ShaderModel>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|Win32'">4.0</ShaderModel>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Profile|Win32'">4.0</ShaderModel>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compute</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">Compute</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">Compute</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">4.0</ShaderModel>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">4.0</ShaderModel>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">4.0</ShaderModel>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">true</ExcludedFromBuild>
     </FxCompile>
     <FxCompile Include="Resources\Shaders\Postprocess\DepthOfField\DepthOfField.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
@@ -861,183 +1267,240 @@
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Compute</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">4.0</ShaderModel>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Compute</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|Win32'">Compute</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Profile|Win32'">Compute</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">4.0</ShaderModel>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|Win32'">4.0</ShaderModel>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Profile|Win32'">4.0</ShaderModel>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compute</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">Compute</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">Compute</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">4.0</ShaderModel>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">4.0</ShaderModel>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">4.0</ShaderModel>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">true</ExcludedFromBuild>
     </FxCompile>
     <FxCompile Include="Resources\Shaders\Postprocess\FilmEffects.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">true</ExcludedFromBuild>
     </FxCompile>
     <FxCompile Include="Resources\Shaders\Postprocess\ExponentialHeightFog.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">true</ExcludedFromBuild>
     </FxCompile>
     <FxCompile Include="Resources\Shaders\Postprocess\FXAA.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">true</ExcludedFromBuild>
     </FxCompile>
     <FxCompile Include="Resources\Shaders\Postprocess\GodRays.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">true</ExcludedFromBuild>
     </FxCompile>
     <FxCompile Include="Resources\Shaders\Postprocess\HBAO.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">true</ExcludedFromBuild>
     </FxCompile>
     <FxCompile Include="Resources\Shaders\Postprocess\LensFlare.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">true</ExcludedFromBuild>
     </FxCompile>
     <FxCompile Include="Resources\Shaders\Postprocess\LensFlare2.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">true</ExcludedFromBuild>
     </FxCompile>
     <FxCompile Include="Resources\Shaders\Postprocess\MotionBlur.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">true</ExcludedFromBuild>
     </FxCompile>
     <FxCompile Include="Resources\Shaders\Postprocess\MotionVectors.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">true</ExcludedFromBuild>
     </FxCompile>
     <FxCompile Include="Resources\Shaders\Postprocess\SSAO.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">true</ExcludedFromBuild>
     </FxCompile>
     <FxCompile Include="Resources\Shaders\Postprocess\SSR.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">true</ExcludedFromBuild>
     </FxCompile>
     <FxCompile Include="Resources\Shaders\Postprocess\TAA.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">true</ExcludedFromBuild>
     </FxCompile>
     <FxCompile Include="Resources\Shaders\Postprocess\Tonemap.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">true</ExcludedFromBuild>
     </FxCompile>
     <FxCompile Include="Resources\Shaders\RayTracing\PathTracer.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">true</ExcludedFromBuild>
     </FxCompile>
     <FxCompile Include="Resources\Shaders\RayTracing\RayTracedAmbientOcclusion.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">true</ExcludedFromBuild>
     </FxCompile>
     <FxCompile Include="Resources\Shaders\RayTracing\RayTracedReflections.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">true</ExcludedFromBuild>
     </FxCompile>
     <FxCompile Include="Resources\Shaders\RayTracing\RayTracedShadows.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">true</ExcludedFromBuild>
     </FxCompile>
     <FxCompile Include="Resources\Shaders\RayTracing\RTAOFilter.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">true</ExcludedFromBuild>
     </FxCompile>
-    <FxCompile Include="Resources\Shaders\ReSTIR\InitialSampling.hlsl">
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">4.0</ShaderModel>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Compute</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">4.0</ShaderModel>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Compute</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">4.0</ShaderModel>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compute</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">4.0</ShaderModel>
+    <FxCompile Include="Resources\Shaders\ReSTIR\DI\InitialSampling.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">true</ExcludedFromBuild>
     </FxCompile>
-    <FxCompile Include="Resources\Shaders\ReSTIR\SpatialResampling.hlsl">
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compute</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">4.0</ShaderModel>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Compute</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">4.0</ShaderModel>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">4.0</ShaderModel>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Compute</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">4.0</ShaderModel>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    <FxCompile Include="Resources\Shaders\ReSTIR\DI\SpatialResampling.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">true</ExcludedFromBuild>
     </FxCompile>
-    <FxCompile Include="Resources\Shaders\ReSTIR\TemporalResampling.hlsl">
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compute</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">4.0</ShaderModel>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Compute</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">4.0</ShaderModel>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">4.0</ShaderModel>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Compute</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">4.0</ShaderModel>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    <FxCompile Include="Resources\Shaders\ReSTIR\DI\TemporalResampling.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">true</ExcludedFromBuild>
     </FxCompile>
     <FxCompile Include="Resources\Shaders\Weather\CloudNoise.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">true</ExcludedFromBuild>
     </FxCompile>
     <FxCompile Include="Resources\Shaders\Weather\Rain.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compute</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">Compute</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">Compute</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">4.0</ShaderModel>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">4.0</ShaderModel>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">4.0</ShaderModel>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Compute</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">4.0</ShaderModel>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">4.0</ShaderModel>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Compute</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|Win32'">Compute</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Profile|Win32'">Compute</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">4.0</ShaderModel>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|Win32'">4.0</ShaderModel>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Profile|Win32'">4.0</ShaderModel>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">true</ExcludedFromBuild>
     </FxCompile>
     <FxCompile Include="Resources\Shaders\Weather\RainBlocker.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">Vertex</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Vertex</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|Win32'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Profile|Win32'">Vertex</ShaderType>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">true</ExcludedFromBuild>
     </FxCompile>
     <FxCompile Include="Resources\Shaders\Weather\RainSimulation.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compute</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">Compute</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">Compute</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">4.0</ShaderModel>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">4.0</ShaderModel>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">4.0</ShaderModel>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Compute</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">4.0</ShaderModel>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">4.0</ShaderModel>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Compute</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|Win32'">Compute</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Profile|Win32'">Compute</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">4.0</ShaderModel>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|Win32'">4.0</ShaderModel>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Profile|Win32'">4.0</ShaderModel>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">true</ExcludedFromBuild>
     </FxCompile>
     <FxCompile Include="Resources\Shaders\Weather\Sky.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">true</ExcludedFromBuild>
     </FxCompile>
     <FxCompile Include="Resources\Shaders\Weather\VolumetricClouds.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">true</ExcludedFromBuild>
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <Text Include="..\External\FidelityFX-SDK\include\FidelityFX\host\backends\dx12\license.txt" />
+    <Text Include="..\External\ImPlot\provenance.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
     <Import Project="..\packages\WinPixEventRuntime.1.0.240308001\build\WinPixEventRuntime.targets" Condition="Exists('..\packages\WinPixEventRuntime.1.0.240308001\build\WinPixEventRuntime.targets')" />
-    <Import Project="..\packages\Microsoft.Direct3D.D3D12.1.614.1\build\native\Microsoft.Direct3D.D3D12.targets" Condition="Exists('..\packages\Microsoft.Direct3D.D3D12.1.614.1\build\native\Microsoft.Direct3D.D3D12.targets')" />
+    <Import Project="..\packages\Microsoft.Direct3D.D3D12.1.615.1\build\native\Microsoft.Direct3D.D3D12.targets" Condition="Exists('..\packages\Microsoft.Direct3D.D3D12.1.615.1\build\native\Microsoft.Direct3D.D3D12.targets')" />
   </ImportGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
     <Error Condition="!Exists('..\packages\WinPixEventRuntime.1.0.240308001\build\WinPixEventRuntime.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\WinPixEventRuntime.1.0.240308001\build\WinPixEventRuntime.targets'))" />
-    <Error Condition="!Exists('..\packages\Microsoft.Direct3D.D3D12.1.614.1\build\native\Microsoft.Direct3D.D3D12.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.Direct3D.D3D12.1.614.1\build\native\Microsoft.Direct3D.D3D12.props'))" />
-    <Error Condition="!Exists('..\packages\Microsoft.Direct3D.D3D12.1.614.1\build\native\Microsoft.Direct3D.D3D12.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.Direct3D.D3D12.1.614.1\build\native\Microsoft.Direct3D.D3D12.targets'))" />
+    <Error Condition="!Exists('..\packages\Microsoft.Direct3D.D3D12.1.615.1\build\native\Microsoft.Direct3D.D3D12.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.Direct3D.D3D12.1.615.1\build\native\Microsoft.Direct3D.D3D12.props'))" />
+    <Error Condition="!Exists('..\packages\Microsoft.Direct3D.D3D12.1.615.1\build\native\Microsoft.Direct3D.D3D12.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.Direct3D.D3D12.1.615.1\build\native\Microsoft.Direct3D.D3D12.targets'))" />
   </Target>
 </Project>

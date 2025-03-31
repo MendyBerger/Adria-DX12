@@ -6,7 +6,6 @@
 #include "RenderGraph/RenderGraph.h"
 #include "Editor/GUICommand.h"
 #include "Core/ConsoleManager.h"
-#include "Logging/Logger.h"
 
 namespace adria
 {
@@ -96,7 +95,7 @@ namespace adria
 
 	Bool FFXCASPass::IsGUIVisible(PostProcessor const* postprocessor) const
 	{
-		return postprocessor->HasTAA();
+		return postprocessor->HasTAA() || postprocessor->HasUpscaler();
 	}
 
 	void FFXCASPass::CreateContext()

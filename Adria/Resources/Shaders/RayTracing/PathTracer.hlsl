@@ -6,21 +6,21 @@ struct PathTracingConstants
     int  accumulatedFrames;
     uint accumIdx;
     uint outputIdx;
+    uint albedoIdx;
+    uint normalIdx;
 };
 ConstantBuffer<PathTracingConstants> PathTracingPassCB : register(b1);
 
 [shader("raygeneration")]
 void PT_RayGen()
 {
-    StructuredBuffer<Light> lightBuffer = ResourceDescriptorHeap[FrameCB.lightsIdx];
     RWTexture2D<float4> accumulationTexture = ResourceDescriptorHeap[PathTracingPassCB.accumIdx];
 
     float2 pixel = float2(DispatchRaysIndex().xy);
     float2 resolution = float2(DispatchRaysDimensions().xy);
 
-    uint randSeed = InitRand(pixel.x + pixel.y * resolution.x, FrameCB.frameCount, 16);
-
-    float2 offset = float2(NextRand(randSeed), NextRand(randSeed));
+    RNG rng = RNG_Initialize(pixel.x + pixel.y * resolution.x, FrameCB.frameCount, 16);
+    float2 offset = float2(RNG_GetNext(rng), RNG_GetNext(rng));
     pixel += lerp(-0.5f.xx, 0.5f.xx, offset);
 
     float2 ncdXY = (pixel / (resolution * 0.5f)) - 1.0f;
@@ -41,6 +41,10 @@ void PT_RayGen()
 
     float3 radiance = 0.0f;
     float3 throughput = 1.0f;
+#if WRITE_GBUFFER
+    float4 albedoColor = 0.0f;
+    float4 normal = 0.0f;
+#endif
     float pdf = 1.0;
     for (int i = 0; i < PathTracingPassCB.bounceCount; ++i)
     {
@@ -50,7 +54,6 @@ void PT_RayGen()
 			Instance instanceData = GetInstanceData(info.instanceIndex);
 			Mesh meshData = GetMeshData(instanceData.meshIndex);
 			Material materialData = GetMaterialData(instanceData.materialIdx);
-
 			VertexData vertex = LoadVertexData(meshData, info.primitiveIndex, info.barycentricCoordinates);
 
             float3 worldPosition = mul(vertex.pos, info.objectToWorldMatrix).xyz;
@@ -60,30 +63,38 @@ void PT_RayGen()
             MaterialProperties matProperties = GetMaterialProperties(materialData, vertex.uv, 0);
             BrdfData brdfData = GetBrdfData(matProperties);
 
+#if WRITE_GBUFFER
+            if (i == 0)
+            {
+                albedoColor = float4(matProperties.baseColor, 1.0f);
+                normal = float4(worldNormal * 0.5f + 0.5f, 1.0f);
+            }
+#endif
+
             int lightIndex = 0;
             float lightWeight = 0.0f;
 
             float3 wo = normalize(FrameCB.cameraPosition.xyz - worldPosition);
-            if (SampleLightRIS(randSeed, worldPosition, worldNormal, lightIndex, lightWeight))
+            if (SampleLightRIS(rng, worldPosition, worldNormal, lightIndex, lightWeight))
             {
-                  Light light = lightBuffer[lightIndex];
-			      float visibility = TraceShadowRay(light, worldPosition.xyz);
-                  float3 wi = normalize(-light.direction.xyz);
+                  LightInfo lightInfo = LoadLightInfo(lightIndex); 
+			      float visibility = TraceShadowRay(lightInfo, worldPosition.xyz);
+                  float3 wi = normalize(-lightInfo.direction.xyz);
 			      float NdotL = saturate(dot(worldNormal, wi));
 
-                  float3 directLighting = DefaultBRDF(wi, wo, worldNormal, brdfData.Diffuse, brdfData.Specular, brdfData.Roughness) * visibility * light.color.rgb * NdotL;
+                  float3 directLighting = DefaultBRDF(wi, wo, worldNormal, brdfData.Diffuse, brdfData.Specular, brdfData.Roughness) * visibility * lightInfo.color.rgb * NdotL;
                   radiance += lightWeight * (directLighting + matProperties.emissive) * throughput / pdf;
             }
 
             if (i == PathTracingPassCB.bounceCount - 1) break;
 
             float probDiffuse = ProbabilityToSampleDiffuse(brdfData.Diffuse, brdfData.Specular);
-            bool chooseDiffuse = NextRand(randSeed) < probDiffuse;
+            bool chooseDiffuse = RNG_GetNext(rng) < probDiffuse;
 
             float3 wi;
             if (chooseDiffuse)
             {
-                wi = GetCosHemisphereSample(randSeed, worldNormal);
+                wi = GetCosHemisphereSample(rng, worldNormal);
 
                 float3 diffuseBrdf = DiffuseBRDF(brdfData.Diffuse);
                 float NdotL = saturate(dot(worldNormal, wi));
@@ -93,7 +104,7 @@ void PT_RayGen()
             }
             else
             {
-                float2 u = float2(NextRand(randSeed), NextRand(randSeed));
+                float2 u = float2(RNG_GetNext(rng), RNG_GetNext(rng));
                 float3 H = SampleGGX(u, brdfData.Roughness, worldNormal);
 
                 float roughness = max(brdfData.Roughness, 0.065);
@@ -137,6 +148,13 @@ void PT_RayGen()
     {
         radiance = float3(1, 0, 0);
     }
+
+#if WRITE_GBUFFER
+    RWTexture2D<float4> albedoTexture = ResourceDescriptorHeap[PathTracingPassCB.albedoIdx];
+    albedoTexture[DispatchRaysIndex().xy] = albedoColor;
+    RWTexture2D<float4> normalTexture = ResourceDescriptorHeap[PathTracingPassCB.normalIdx];
+    normalTexture[DispatchRaysIndex().xy] = normal;
+#endif
 
     RWTexture2D<float4> outputTexture = ResourceDescriptorHeap[PathTracingPassCB.outputIdx];
     accumulationTexture[DispatchRaysIndex().xy] = float4(radiance, 1.0);

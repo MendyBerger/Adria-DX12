@@ -6,7 +6,6 @@
 #include "Graphics/GfxShaderCompiler.h"
 #include "Graphics/GfxDevice.h"
 #include "Graphics/GfxPipelineState.h"
-#include "Logging/Logger.h"
 #include "Utilities/Timer.h"
 #include "Utilities/FileWatcher.h"
 
@@ -57,9 +56,11 @@ namespace adria
 			case VS_DDGIVisualize:
 			case VS_Rain:
 			case VS_RainBlocker:
+			case VS_Transparent:
 				return GfxShaderStage::VS;
 			case PS_Sky:
 			case PS_Texture:
+			case PS_Transparent:
 			case PS_Solid:
 			case PS_Decals:
 			case PS_GBuffer:
@@ -129,12 +130,12 @@ namespace adria
 			case CS_DDGIUpdateIrradiance:
 			case CS_DDGIUpdateDistance:
 			case CS_RainSimulation:
-			case CS_ReSTIRGI_InitialSampling:
-			case CS_ReSTIRGI_TemporalResampling:
-			case CS_ReSTIRGI_SpatialResampling:
+			case CS_ReSTIR_DI_InitialSampling:
+			case CS_ReSTIR_DI_TemporalResampling:
+			case CS_ReSTIR_DI_SpatialResampling:
 			case CS_VolumetricFog_LightInjection:
 			case CS_VolumetricFog_ScatteringIntegration:
-			case CS_RendererOutput:
+			case CS_RendererDebugView:
 			case CS_DepthOfField_ComputeCoC:
 			case CS_DepthOfField_ComputeSeparatedCoC:
 			case CS_DepthOfField_DownsampleCoC:
@@ -143,6 +144,8 @@ namespace adria
 			case CS_DepthOfField_BokehSecondPass:
 			case CS_DepthOfField_ComputePostfilteredTexture:
 			case CS_DepthOfField_Combine:
+			case CS_TensorToTexture:
+			case CS_TextureToTensor:
 				return GfxShaderStage::CS;
 			case HS_OceanLOD:
 				return GfxShaderStage::HS;
@@ -182,6 +185,9 @@ namespace adria
 			case PS_Texture:
 			case PS_Solid:
 				return "Other/Simple.hlsl";
+			case VS_Transparent:
+			case PS_Transparent:
+				return "Other/Transparent.hlsl";
 			case VS_Debug:
 			case PS_Debug:
 				return "Other/Debug.hlsl";
@@ -232,7 +238,7 @@ namespace adria
 			case CS_OceanNormals:
 				return "Ocean/OceanNormals.hlsl";
 			case VS_Ocean:
-		    case PS_Ocean:
+			case PS_Ocean:
 				return "Ocean/Ocean.hlsl";
 			case VS_OceanLOD:
 			case HS_OceanLOD:
@@ -320,14 +326,14 @@ namespace adria
 				return "RayTracing/RayTracedReflections.hlsl";
 			case LIB_PathTracing:
 				return "RayTracing/PathTracer.hlsl";
-			case CS_ReSTIRGI_InitialSampling:
-				return "ReSTIR/InitialSampling.hlsl";
-			case CS_ReSTIRGI_TemporalResampling:
-				return "ReSTIR/TemporalResampling.hlsl";
-			case CS_ReSTIRGI_SpatialResampling:
-				return "ReSTIR/SpatialResampling.hlsl";
-			case CS_RendererOutput:
-				return "Other/RendererOutput.hlsl";
+			case CS_ReSTIR_DI_InitialSampling:
+				return "ReSTIR/DI/InitialSampling.hlsl";
+			case CS_ReSTIR_DI_TemporalResampling:
+				return "ReSTIR/DI/TemporalResampling.hlsl";
+			case CS_ReSTIR_DI_SpatialResampling:
+				return "ReSTIR/DI/SpatialResampling.hlsl";
+			case CS_RendererDebugView:
+				return "Other/RendererDebugView.hlsl";
 			case CS_DepthOfField_ComputeCoC:
 			case CS_DepthOfField_ComputeSeparatedCoC:
 			case CS_DepthOfField_DownsampleCoC:
@@ -341,6 +347,9 @@ namespace adria
 				return "Postprocess/DepthOfField/Bokeh.hlsl";
 			case PS_VRSOverlay:
 				return "Other/VRSOverlay.hlsl";
+			case CS_TensorToTexture:
+			case CS_TextureToTensor:
+				return "Other/TensorTextureConversions.hlsl";
 			case ShaderId_Count:
 			default:
 				return "";
@@ -478,6 +487,10 @@ namespace adria
 				return "SunVS";
 			case PS_Texture:
 				return "TexturePS";
+			case VS_Transparent:
+				return "TransparentVS";
+			case PS_Transparent:
+				return "TransparentPS";
 			case PS_Solid:
 				return "SolidPS";
 			case VS_Decals:
@@ -526,14 +539,14 @@ namespace adria
 				return "DDGIVisualizeVS";
 			case PS_DDGIVisualize:
 				return "DDGIVisualizePS";
-			case CS_ReSTIRGI_InitialSampling:
+			case CS_ReSTIR_DI_InitialSampling:
 				return "InitialSamplingCS";
-			case CS_ReSTIRGI_TemporalResampling:
+			case CS_ReSTIR_DI_TemporalResampling:
 				return "TemporalResamplingCS";
-			case CS_ReSTIRGI_SpatialResampling:
-				return "SpatialResampling";
-			case CS_RendererOutput:
-				return "RendererOutputCS";
+			case CS_ReSTIR_DI_SpatialResampling:
+				return "SpatialResamplingCS";
+			case CS_RendererDebugView:
+				return "RendererDebugViewCS";
 			case CS_DepthOfField_ComputeCoC:
 				return "ComputeCircleOfConfusionCS";
 			case CS_DepthOfField_ComputeSeparatedCoC:
@@ -552,6 +565,10 @@ namespace adria
 				return "CombineCS";
 			case PS_VRSOverlay:
 				return "VRSOverlayPS";
+			case CS_TensorToTexture:
+				return "TensorToTextureCS";
+			case CS_TextureToTensor:
+				return "TextureToTensorCS";
 			}
 			return "main";
 		}

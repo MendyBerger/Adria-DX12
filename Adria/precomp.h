@@ -4,6 +4,7 @@
 #include <memory>
 #include <string>
 #include <array>
+#include <stack>
 #include <queue>
 #include <mutex>
 #include <thread>
@@ -18,9 +19,12 @@
 #include <d3d12.h>
 #include <dxgi1_6.h>
 #include <windows.h>
-
+#define DML_TARGET_VERSION_USE_LATEST
+#include <DirectML.h>
 #include <DirectXMath.h>
+
 #include "d3dx12.h"
+#include "DirectMLX.h"
 #include "D3D12MemAlloc.h"
 #include "nfd.h"
 #include "entt/entt.hpp"
@@ -28,9 +32,10 @@
 #include "cereal/types/string.hpp"
 #include "cereal/types/vector.hpp"
 #define IMGUI_DEFINE_MATH_OPERATORS
-#include "ImGui/imgui.h"
-
+#include "imgui.h"
 #include "Core/Types.h"
 #include "Core/Macros.h"
+#include "Core/Log.h"
+#include "Graphics/GfxMacros.h"
 #include "Math/MathCommon.h"
 #include "Utilities/Ref.h"

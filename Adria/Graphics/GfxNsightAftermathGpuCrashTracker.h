@@ -35,7 +35,7 @@ namespace adria
 	private:
 		GfxDevice* gfx;
 		Bool initialized = false;
-		mutable std::mutex m_mutex;
+		mutable std::mutex aftermath_mutex;
 		std::map<GFSDK_Aftermath_ShaderDebugInfoIdentifier, std::vector<Uint8>, GFSDK_Aftermath_ShaderDebugInfoIdentifierComparator> shader_debug_info_map;
 		mutable std::unordered_map<Uint64, GfxShaderKey> shader_hash_map;
 

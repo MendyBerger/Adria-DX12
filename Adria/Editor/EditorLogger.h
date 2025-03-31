@@ -1,8 +1,7 @@
 #pragma once
 #include <memory>
 #define IMGUI_DEFINE_MATH_OPERATORS
-#include "ImGui/imgui.h"
-#include "Logging/Logger.h"
+#include "imgui.h"
 
 namespace adria
 {

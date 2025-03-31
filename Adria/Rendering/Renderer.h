@@ -6,11 +6,12 @@
 #include "GPUDrivenGBufferPass.h"
 #include "SkyPass.h"
 #include "DeferredLightingPass.h"
-#include "VolumetricLightingPass.h"
-#include "VolumetricFogPass.h"
+#include "RayMarchedVolumetricFogPass.h"
+#include "FogVolumesPass.h"
 #include "TiledDeferredLightingPass.h"
 #include "ClusteredDeferredLightingPass.h"
 #include "DDGIPass.h"
+#include "ReSTIR_DI.h"
 #include "GPUDebugPrinter.h"
 #include "HelperPasses.h"
 #include "PickingPass.h"
@@ -20,7 +21,9 @@
 #include "AccelerationStructure.h"
 #include "ShadowRenderer.h"
 #include "PathTracingPass.h"
-#include "RendererOutputPass.h"
+#include "TransparentPass.h"
+#include "VolumetricFogManager.h"
+#include "RendererDebugViewPass.h"
 #include "Graphics/GfxShaderCompiler.h"
 #include "Graphics/GfxConstantBuffer.h"
 #include "RenderGraph/RenderGraphResourcePool.h"
@@ -33,7 +36,7 @@ namespace adria
 	class GfxTexture;
 	struct Light;
 
-	enum class LightingPathType : Uint8
+	enum class LightingPath : Uint8
 	{
 		Deferred,
 		TiledDeferred,
@@ -43,13 +46,6 @@ namespace adria
 
 	class Renderer
 	{
-		enum class VolumetricPathType : Uint8
-		{
-			None,
-			Raymarching,
-			FogVolume
-		};
-
 	public:
 
 		Renderer(entt::registry& reg, GfxDevice* gfx, Uint32 width, Uint32 height);
@@ -69,15 +65,10 @@ namespace adria
 		PickingData const& GetPickingData() const { return picking_data; }
 		Vector2u GetDisplayResolution() const { return Vector2u(display_width, display_height); }
 
-		RendererOutput GetRendererOutput() const { return renderer_output; }
-		LightingPathType GetLightingPath() const { return lighting_path; }
-		void SetRendererOutput(RendererOutput type)
-		{
-			renderer_output = type;
-			gbuffer_pass.OnRendererOutputChanged(type);
-			gpu_driven_renderer.OnRendererOutputChanged(type);
-		}
-		void SetLightingPath(LightingPathType path);
+		void SetLightingPath(LightingPath path);
+		LightingPath GetLightingPath() const { return lighting_path; }
+		void SetDebugView(RendererDebugView debug_view);
+		RendererDebugView GetDebugView() const { return renderer_debug_view_pass.GetDebugView(); }
 		void SetViewportData(ViewportData const& vp);
 
 	private:
@@ -122,8 +113,7 @@ namespace adria
 		GPUDrivenGBufferPass gpu_driven_renderer;
 		SkyPass		 sky_pass;
 		DeferredLightingPass deferred_lighting_pass;
-		VolumetricLightingPass volumetric_lighting_pass;
-		VolumetricFogPass volumetric_fog_pass;
+		
 		TiledDeferredLightingPass tiled_deferred_lighting_pass;
 		ClusteredDeferredLightingPass clustered_deferred_lighting_pass;
 		CopyToTexturePass copy_to_texture_pass;
@@ -135,9 +125,12 @@ namespace adria
 		ShadowRenderer shadow_renderer;
 		PostProcessor postprocessor;
 		DDGIPass		  ddgi;
+		ReSTIR_DI		  restir_di;
 		PathTracingPass path_tracer;
-		RendererOutputPass renderer_output_pass;
+		RendererDebugViewPass renderer_debug_view_pass;
 		GPUDebugPrinter gpu_debug_printer;
+		TransparentPass transparent_pass;
+		VolumetricFogManager volumetric_fog_manager;
 
 		//ray tracing
 		Bool ray_tracing_supported = false;
@@ -148,8 +141,7 @@ namespace adria
 		Bool update_picking_data = false;
 		PickingData picking_data;
 
-		LightingPathType	 lighting_path = LightingPathType::Deferred;
-		RendererOutput		 renderer_output = RendererOutput::Final;
+		LightingPath		lighting_path = LightingPath::Deferred;
 
 		std::unique_ptr<GfxTexture> overdraw_texture = nullptr;
 		GfxDescriptor				overdraw_texture_uav;
@@ -170,9 +162,6 @@ namespace adria
 		Uint64						screenshot_fence_value = 1;
 		std::unique_ptr<GfxBuffer>  screenshot_buffer;
 
-		//volumetric
-		Uint32			         volumetric_lights = 0;
-		VolumetricPathType		 volumetric_path = VolumetricPathType::Raymarching;
 		//misc
 		ViewportData			 viewport_data;
 
@@ -180,6 +169,7 @@ namespace adria
 		std::unique_ptr<GfxTexture> hud_texture;
 
 	private:
+		void RegisterEventListeners();
 		void CreateDisplaySizeDependentResources();
 		void CreateRenderSizeDependentResources();
 		void CreateAS();
@@ -189,6 +179,7 @@ namespace adria
 		void UpdateFrameConstants(Float dt);
 		void CameraFrustumCulling();
 
+		void RenderImpl(RenderGraph& rg);
 		void Render_Deferred(RenderGraph& rg);
 		void Render_PathTracing(RenderGraph& rg);
 

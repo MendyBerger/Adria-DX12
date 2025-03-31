@@ -15,12 +15,12 @@ namespace adria
 	public:
 		UpscalerPassGroup(GfxDevice* gfx, Uint32 width, Uint32 height);
 		virtual void OnResize(Uint32 w, Uint32 h) override;
-
 		void AddRenderResolutionChangedCallback(RenderResolutionChangedDelegate delegate)
 		{
 			for (auto& post_effect : post_effects) post_effect->GetRenderResolutionChangedEvent().Add(delegate);
 			upscaler_disabled_event.Add(delegate);
 		}
+		Bool NeedsJitter() const;
 
 	private:
 		UpscalerType upscaler_type;

@@ -20,53 +20,39 @@
 #include "Utilities/Random.h"
 #include "Utilities/ImageWrite.h"
 #include "Math/Constants.h"
-#include "Logging/Logger.h"
 #include "Core/Paths.h"
 #include "Core/ConsoleManager.h"
 #include "entt/entity/registry.hpp"
-
+#include "tracy/Tracy.hpp"
 
 using namespace DirectX;
 
 namespace adria
 {
-	static TAutoConsoleVariable<Int>  LightingPath("r.LightingPath", 0, "0 - Deferred, 1 - Tiled Deferred, 2 - Clustered Deferred, 3 - Path Tracing");
-	static TAutoConsoleVariable<Int>  VolumetricPath("r.VolumetricPath", 1, "0 - None, 1 - 2D Raymarching, 2 - Fog Volume");
+	static TAutoConsoleVariable<Int>  LightingPathType("r.LightingPath", 0, "0 - Deferred, 1 - Tiled Deferred, 2 - Clustered Deferred, 3 - Path Tracing");
 
 	Renderer::Renderer(entt::registry& reg, GfxDevice* gfx, Uint32 width, Uint32 height) : reg(reg), gfx(gfx), resource_pool(gfx),
 		accel_structure(gfx), camera(nullptr), display_width(width), display_height(height), render_width(width), render_height(height),
 		backbuffer_count(gfx->GetBackbufferCount()), backbuffer_index(gfx->GetBackbufferIndex()), final_texture(nullptr),
 		frame_cbuffer(gfx, backbuffer_count), gpu_driven_renderer(reg, gfx, width, height),
 		gbuffer_pass(reg, gfx, width, height),
-		sky_pass(reg, gfx, width, height), deferred_lighting_pass(gfx, width, height), 
-		volumetric_lighting_pass(gfx, width, height), volumetric_fog_pass(gfx, reg, width, height),
+		sky_pass(reg, gfx, width, height), deferred_lighting_pass(gfx, width, height),
 		tiled_deferred_lighting_pass(reg, gfx, width, height) , copy_to_texture_pass(gfx, width, height), add_textures_pass(gfx, width, height),
 		postprocessor(gfx, reg, width, height), picking_pass(gfx, width, height),
 		clustered_deferred_lighting_pass(reg, gfx, width, height),
 		decals_pass(reg, gfx, width, height), rain_pass(reg, gfx, width, height), ocean_renderer(reg, gfx, width, height),
-		shadow_renderer(reg, gfx, width, height), renderer_output_pass(gfx, width, height),
-		path_tracer(gfx, width, height), ddgi(gfx, reg, width, height), gpu_debug_printer(gfx)
+		shadow_renderer(reg, gfx, width, height), renderer_debug_view_pass(gfx, width, height),
+		path_tracer(gfx, width, height), ddgi(gfx, reg, width, height), restir_di(gfx, width, height), gpu_debug_printer(gfx),
+		transparent_pass(reg, gfx, width, height), ray_tracing_supported(gfx->GetCapabilities().SupportsRayTracing()),
+		volumetric_fog_manager(gfx, reg, width, height)
 	{
-		ray_tracing_supported = gfx->GetCapabilities().SupportsRayTracing();
-
 		g_DebugRenderer.Initialize(gfx, width, height);
 		g_GfxProfiler.Initialize(gfx);
 		GfxTracyProfiler::Initialize(gfx);
 		CreateDisplaySizeDependentResources();
 		CreateRenderSizeDependentResources();
-
-		postprocessor.AddRenderResolutionChangedCallback(RenderResolutionChangedDelegate::CreateMember(&Renderer::OnRenderResolutionChanged, *this));
-		shadow_renderer.GetShadowTextureRenderedEvent().AddMember(&DeferredLightingPass::OnShadowTextureRendered, deferred_lighting_pass);
-		shadow_renderer.GetShadowTextureRenderedEvent().AddMember(&VolumetricLightingPass::OnShadowTextureRendered, volumetric_lighting_pass);
-
-		rain_pass.GetRainEvent().AddMember(&PostProcessor::OnRainEvent, postprocessor);
-		rain_pass.GetRainEvent().AddMember(&GPUDrivenGBufferPass::OnRainEvent, gpu_driven_renderer);
-		rain_pass.GetRainEvent().AddMember(&GBufferPass::OnRainEvent, gbuffer_pass);
+		RegisterEventListeners();
 		screenshot_fence.Create(gfx, "Screenshot Fence");
-		{
-			LightingPath->AddOnChanged(ConsoleVariableDelegate::CreateLambda([this](IConsoleVariable* cvar) { lighting_path = static_cast<LightingPathType>(cvar->GetInt()); }));
-			VolumetricPath->AddOnChanged(ConsoleVariableDelegate::CreateLambda([this](IConsoleVariable* cvar) { volumetric_path = static_cast<VolumetricPathType>(cvar->GetInt()); }));
-		}
 	}
 
 	Renderer::~Renderer()
@@ -78,10 +64,15 @@ namespace adria
 		gfxcommon::Destroy();
 	}
 
-	void Renderer::SetLightingPath(LightingPathType path)
+	void Renderer::SetDebugView(RendererDebugView debug_view)
+	{
+		renderer_debug_view_pass.SetDebugView(debug_view);
+	}
+
+	void Renderer::SetLightingPath(LightingPath path)
 	{
 		lighting_path = path;
-		LightingPath->Set((Int)path);
+		LightingPathType->Set((Int)path);
 	}
 
 	void Renderer::SetViewportData(ViewportData const& vp)
@@ -105,41 +96,10 @@ namespace adria
 	}
 	void Renderer::Render(MyPluginRuntimeRender* pr_render)
 	{
+		ZoneScopedN("Renderer::Render");
 		RenderGraph render_graph(resource_pool);
-		RGBlackboard& rg_blackboard = render_graph.GetBlackboard();
-		FrameBlackboardData frame_data{};
-		{
-			Vector3 cam_pos = camera->Position();
-			frame_data.camera_position[0] = cam_pos.x;
-			frame_data.camera_position[1] = cam_pos.y;
-			frame_data.camera_position[2] = cam_pos.z;
-			frame_data.camera_position[3] = 1.0f;
-			frame_data.camera_view = camera->View();
-			frame_data.camera_proj = camera->Proj();
-			frame_data.camera_viewproj = camera->ViewProj();
-			frame_data.camera_fov = camera->Fov();
-			frame_data.camera_aspect_ratio = camera->AspectRatio();
-			frame_data.camera_near = camera->Near();
-			frame_data.camera_far = camera->Far();
-			frame_data.camera_jitter_x = camera_jitter.x;
-			frame_data.camera_jitter_y = camera_jitter.y;
-			frame_data.delta_time = frame_cbuf_data.delta_time;
-			frame_data.frame_cbuffer_address = frame_cbuffer.GetGpuAddress(backbuffer_index);
-		}
-		rg_blackboard.Add<FrameBlackboardData>(std::move(frame_data));
 
-		render_graph.ImportTexture(RG_NAME(Backbuffer), gfx->GetBackbuffer());
-		render_graph.ImportTexture(RG_NAME(FinalTexture), final_texture.get());
-		postprocessor.ImportHistoryResources(render_graph);
-
-		gpu_debug_printer.AddClearPass(render_graph);
-		if (lighting_path == LightingPathType::PathTracing) Render_PathTracing(render_graph);
-		else Render_Deferred(render_graph);
-		if (take_screenshot) TakeScreenshot(render_graph);
-		gpu_debug_printer.AddPrintPass(render_graph);
-
-		if (!g_Editor.IsActive()) CopyToBackbuffer(render_graph);
-		else g_Editor.AddRenderPass(render_graph);
+		RenderImpl(render_graph);
 
 		auto textures = pr_render->PullPresentTransparentTextures();
 		if (textures != nullptr && textures->texture != nullptr)
@@ -159,21 +119,17 @@ namespace adria
 			CopyToTexturePass copy_pass(gfx, 200, 200, hud_texture.get());
 			render_graph.AddImportTextureCopyPass(hud_texture.get(), RG_NAME(HUD_TEMP));
 			copy_pass.AddPass(render_graph, RG_NAME(Backbuffer), RG_NAME(HUD_TEMP), BlendMode::AdditiveBlend);
-
-			render_graph.Build();
-			render_graph.Execute();
 		}
 		else
 		{
 			CopyToTexturePass copy_pass(gfx, 200, 200, hud_texture.get());
 			copy_pass.AddPass(render_graph, RG_NAME(Backbuffer), RG_NAME(VolumetricLightOutput), BlendMode::AdditiveBlend);
-
-			render_graph.Build();
-			render_graph.Execute();
 		}
 
 
-		GUI();
+		render_graph.Compile();
+		render_graph.Execute();
+		g_Editor.EndFrame();
 	}
 
 	void Renderer::OnResize(Uint32 w, Uint32 h)
@@ -185,7 +141,7 @@ namespace adria
 			postprocessor.OnResize(w, h);
 			g_DebugRenderer.OnResize(w, h);
 			path_tracer.OnResize(w, h);
-			renderer_output_pass.OnResize(w, h);
+			renderer_debug_view_pass.OnResize(w, h);
 		}
 	}
 	void Renderer::OnRenderResolutionChanged(Uint32 w, Uint32 h)
@@ -197,10 +153,9 @@ namespace adria
 
 			gbuffer_pass.OnResize(w, h);
 			gpu_driven_renderer.OnResize(w, h);
+			transparent_pass.OnResize(w, h);
 			sky_pass.OnResize(w, h);
 			deferred_lighting_pass.OnResize(w, h);
-			volumetric_lighting_pass.OnResize(w, h);
-			volumetric_fog_pass.OnResize(w, h);
 			tiled_deferred_lighting_pass.OnResize(w, h);
 			clustered_deferred_lighting_pass.OnResize(w, h);
 			copy_to_texture_pass.OnResize(w, h);
@@ -210,7 +165,9 @@ namespace adria
 			ocean_renderer.OnResize(w, h);
 			shadow_renderer.OnResize(w, h);
 			ddgi.OnResize(w, h);
+			restir_di.OnResize(w, h);
 			rain_pass.OnResize(w, h);
+			volumetric_fog_manager.OnResize(w, h);
 		}
 	}
 
@@ -223,7 +180,7 @@ namespace adria
 		postprocessor.OnSceneInitialized();
 		ocean_renderer.OnSceneInitialized();
 		ddgi.OnSceneInitialized();
-		volumetric_fog_pass.OnSceneInitialized();
+		volumetric_fog_manager.OnSceneInitialized();
 		CreateAS();
 
 		gfxcommon::Initialize(gfx);
@@ -248,6 +205,25 @@ namespace adria
 	void Renderer::OnLightChanged()
 	{
 		path_tracer.Reset();
+	}
+
+	void Renderer::RegisterEventListeners()
+	{
+		postprocessor.AddRenderResolutionChangedCallback(RenderResolutionChangedDelegate::CreateMember(&Renderer::OnRenderResolutionChanged, *this));
+		shadow_renderer.GetShadowTextureRenderedEvent().AddMember(&DeferredLightingPass::OnShadowTextureRendered, deferred_lighting_pass);
+		shadow_renderer.GetShadowTextureRenderedEvent().AddMember(&VolumetricFogManager::OnShadowTextureRendered, volumetric_fog_manager);
+
+		rain_pass.GetRainEvent().AddMember(&PostProcessor::OnRainEvent, postprocessor);
+		rain_pass.GetRainEvent().AddMember(&GPUDrivenGBufferPass::OnRainEvent, gpu_driven_renderer);
+		rain_pass.GetRainEvent().AddMember(&GBufferPass::OnRainEvent, gbuffer_pass);
+
+		transparent_pass.GetTransparentChangedEvent().AddMember(&GPUDrivenGBufferPass::OnTransparentChanged, gpu_driven_renderer);
+		transparent_pass.GetTransparentChangedEvent().AddMember(&GBufferPass::OnTransparentChanged, gbuffer_pass);
+
+		renderer_debug_view_pass.GetDebugViewChangedEvent().AddMember(&GPUDrivenGBufferPass::OnDebugViewChanged, gpu_driven_renderer);
+		renderer_debug_view_pass.GetDebugViewChangedEvent().AddMember(&GBufferPass::OnDebugViewChanged, gbuffer_pass);
+
+		LightingPathType->AddOnChanged(ConsoleVariableDelegate::CreateLambda([this](IConsoleVariable* cvar) { lighting_path = static_cast<LightingPath>(cvar->GetInt()); }));
 	}
 
 	void Renderer::CreateDisplaySizeDependentResources()
@@ -290,13 +266,12 @@ namespace adria
 
 	void Renderer::UpdateSceneBuffers()
 	{
-		volumetric_lights = 0;
 		for (auto e : reg.view<Batch>()) reg.destroy(e);
 		reg.clear<Batch>();
 
 		std::vector<LightGPU> hlsl_lights{};
 		Uint32 light_index = 0;
-		Matrix light_transform = lighting_path == LightingPathType::PathTracing ? Matrix::Identity : camera->View();
+		Matrix light_transform = lighting_path == LightingPath::PathTracing ? Matrix::Identity : camera->View();
 		for (auto light_entity : reg.view<Light>())
 		{
 			Light& light = reg.get<Light>(light_entity);
@@ -318,7 +293,6 @@ namespace adria
 			hlsl_light.shadow_texture_index = light.casts_shadows ? light.shadow_texture_index : -1;
 			hlsl_light.shadow_mask_index = light.ray_traced_shadows ? light.shadow_mask_index : -1;
 			hlsl_light.use_cascades = light.use_cascades;
-			if (light.volumetric) ++volumetric_lights;
 		}
 
 		std::vector<MeshGPU> meshes;
@@ -343,6 +317,10 @@ namespace adria
 				submesh.buffer_address = mesh_buffer->GetGpuAddress();
 
 				entt::entity batch_entity = reg.create();
+				if (material.alpha_mode == MaterialAlphaMode::Blend)
+				{
+					reg.emplace<Transparent>(batch_entity);
+				}
 				Batch& batch = reg.emplace<Batch>(batch_entity);
 				batch.instance_id = instanceID;
 				batch.alpha_mode = material.alpha_mode;
@@ -350,6 +328,7 @@ namespace adria
 				batch.submesh = &submesh;
 				batch.world_transform = instance.world_transform;
 				submesh.bounding_box.Transform(batch.bounding_box, batch.world_transform);
+				
 
 				InstanceGPU& instance_gpu = instances.emplace_back();
 				instance_gpu.instance_id = instanceID;
@@ -392,6 +371,7 @@ namespace adria
 				material_gpu.emissive_idx = (Uint32)material.emissive_texture;
 				material_gpu.emissive_factor = material.emissive_factor;
 				material_gpu.alpha_cutoff = material.alpha_cutoff;
+				material_gpu.alpha_blended = material.alpha_mode == MaterialAlphaMode::Blend;
 
 				material_gpu.anisotropy_idx = (Int32)material.anisotropy_texture;
 				material_gpu.anisotropy_strength = material.anisotropy_strength;
@@ -435,8 +415,14 @@ namespace adria
 		rain_pass.Update(dt);
 
 		camera_jitter = Vector2(0.0f, 0.0f);
-		if (postprocessor.NeedsJitter()) camera_jitter = camera->Jitter(gfx->GetFrameIndex());
-		if (camera->IsChanged()) path_tracer.Reset();
+		if (postprocessor.NeedsJitter())
+		{
+			camera_jitter = camera->Jitter(gfx->GetFrameIndex());
+		}
+		if (camera->IsChanged())
+		{
+			path_tracer.Reset();
+		}
 
 		frame_cbuf_data.camera_near = camera->Near();
 		frame_cbuf_data.camera_far = camera->Far();
@@ -479,7 +465,7 @@ namespace adria
 		{
 			frame_cbuf_data.accel_struct_idx = accel_structure.GetTLASIndex();
 		}
-		if (renderer_output == RendererOutput::TriangleOverdraw)
+		if (renderer_debug_view_pass.GetDebugView() == RendererDebugView::TriangleOverdraw)
 		{
 			overdraw_texture_uav_gpu = gfx->AllocateDescriptorsGPU();
 			gfx->CopyDescriptors(1, overdraw_texture_uav_gpu, overdraw_texture_uav);
@@ -520,84 +506,148 @@ namespace adria
 		}
 	}
 
+	void Renderer::RenderImpl(RenderGraph& render_graph)
+	{
+		ZoneScopedN("Renderer::RenderImpl");
+		RG_SCOPE(render_graph, "Frame");
+		RGBlackboard& rg_blackboard = render_graph.GetBlackboard();
+		FrameBlackboardData frame_data{};
+		{
+			Vector3 cam_pos = camera->Position();
+			frame_data.camera_position[0] = cam_pos.x;
+			frame_data.camera_position[1] = cam_pos.y;
+			frame_data.camera_position[2] = cam_pos.z;
+			frame_data.camera_position[3] = 1.0f;
+			frame_data.camera_view = camera->View();
+			frame_data.camera_proj = camera->Proj();
+			frame_data.camera_viewproj = camera->ViewProj();
+			frame_data.camera_fov = camera->Fov();
+			frame_data.camera_aspect_ratio = camera->AspectRatio();
+			frame_data.camera_near = camera->Near();
+			frame_data.camera_far = camera->Far();
+			frame_data.camera_jitter_x = camera_jitter.x;
+			frame_data.camera_jitter_y = camera_jitter.y;
+			frame_data.delta_time = frame_cbuf_data.delta_time;
+			frame_data.frame_cbuffer_address = frame_cbuffer.GetGpuAddress(backbuffer_index);
+		}
+		rg_blackboard.Add<FrameBlackboardData>(std::move(frame_data));
+		render_graph.ImportTexture(RG_NAME(Backbuffer), gfx->GetBackbuffer());
+		render_graph.ImportTexture(RG_NAME(FinalTexture), final_texture.get());
+		postprocessor.ImportHistoryResources(render_graph);
+
+		gpu_debug_printer.AddClearPass(render_graph);
+		if (lighting_path == LightingPath::PathTracing) Render_PathTracing(render_graph);
+		else Render_Deferred(render_graph);
+		if (take_screenshot) TakeScreenshot(render_graph);
+		gpu_debug_printer.AddPrintPass(render_graph);
+		if (!g_Editor.IsActive())
+		{
+			CopyToBackbuffer(render_graph);
+		}
+		else 
+		{
+			g_Editor.AddRenderPass(render_graph);
+		}
+
+		GUI();
+	}
 	void Renderer::Render_Deferred(RenderGraph& render_graph)
 	{
+		ZoneScopedN("Renderer::Render_Deferred");
 		if (update_picking_data)
 		{
 			picking_data = picking_pass.GetPickingData();
 			update_picking_data = false;
 		}
-		if(renderer_output == RendererOutput::TriangleOverdraw)
+		if(renderer_debug_view_pass.GetDebugView() == RendererDebugView::TriangleOverdraw)
 		{
 			ClearTriangleOverdrawTexture(render_graph);
 		}
 		if (rain_pass.IsEnabled()) rain_pass.AddBlockerPass(render_graph);
+		
 		if (gpu_driven_renderer.IsEnabled()) gpu_driven_renderer.AddPasses(render_graph);
 		else gbuffer_pass.AddPass(render_graph);
 
 		if(ddgi.IsEnabled()) ddgi.AddPasses(render_graph);
-
 		decals_pass.AddPass(render_graph);
 		postprocessor.AddAmbientOcclusionPass(render_graph);
-		shadow_renderer.AddShadowMapPasses(render_graph);
-		shadow_renderer.AddRayTracingShadowPasses(render_graph);
-
-		if (renderer_output == RendererOutput::Final)
 		{
-			switch (lighting_path)
-			{
-			case LightingPathType::Deferred:			deferred_lighting_pass.AddPass(render_graph); break;
-			case LightingPathType::TiledDeferred:		tiled_deferred_lighting_pass.AddPass(render_graph); break;
-			case LightingPathType::ClusteredDeferred:	clustered_deferred_lighting_pass.AddPass(render_graph, true); break;
-			}
+			RG_SCOPE(render_graph, "Shadows");
+			shadow_renderer.AddShadowMapPasses(render_graph);
+			shadow_renderer.AddRayTracingShadowPasses(render_graph);
+		}
 
-			if (volumetric_lights > 0)
+		if (renderer_debug_view_pass.GetDebugView() == RendererDebugView::Final)
+		{
 			{
-				switch (volumetric_path)
+				RG_SCOPE(render_graph, "Lighting");
+				switch (lighting_path)
 				{
-				case VolumetricPathType::Raymarching:	volumetric_lighting_pass.AddPass(render_graph); break;
-				case VolumetricPathType::FogVolume:		volumetric_fog_pass.AddPasses(render_graph); break;
+				case LightingPath::Deferred:			deferred_lighting_pass.AddPass(render_graph); break;
+				case LightingPath::TiledDeferred:		tiled_deferred_lighting_pass.AddPass(render_graph); break;
+				case LightingPath::ClusteredDeferred:	clustered_deferred_lighting_pass.AddPass(render_graph, true); break;
 				}
+				volumetric_fog_manager.AddPass(render_graph);
 			}
 
-			if (ddgi.IsEnabled() && ddgi.Visualize()) ddgi.AddVisualizePass(render_graph);
-			ocean_renderer.AddPasses(render_graph);
-			sky_pass.AddComputeSkyPass(render_graph, sun_direction);
-			sky_pass.AddDrawSkyPass(render_graph);
-			picking_pass.AddPass(render_graph);
-			if (rain_pass.IsEnabled()) rain_pass.AddPass(render_graph);
+			if (ddgi.IsEnabled() && ddgi.Visualize())
+			{
+				ddgi.AddVisualizePass(render_graph);
+			}
+			{
+				RG_SCOPE(render_graph, "Forward");
+				ocean_renderer.AddPasses(render_graph);
+				sky_pass.AddPasses(render_graph, sun_direction);
+				transparent_pass.AddPass(render_graph);
+				picking_pass.AddPass(render_graph);
+				if (rain_pass.IsEnabled()) rain_pass.AddPass(render_graph);
+			}
 			postprocessor.AddPasses(render_graph);
 			g_DebugRenderer.Render(render_graph);
 		}
 		else
 		{
-			renderer_output_pass.AddPass(render_graph, renderer_output);
+			if (renderer_debug_view_pass.GetDebugView() == RendererDebugView::MotionVectors)
+			{
+				postprocessor.AddMotionVectorsPass(render_graph);
+			}
+			renderer_debug_view_pass.AddPass(render_graph);
 		}
 	}
 	void Renderer::Render_PathTracing(RenderGraph& render_graph)
 	{
+		ZoneScopedN("Renderer::Render_PathTracing");
 		path_tracer.AddPass(render_graph);
-		postprocessor.AddTonemapPass(render_graph, RG_NAME(PT_Output));
+		postprocessor.AddTonemapPass(render_graph, path_tracer.GetFinalOutput());
 	}
 
 	void Renderer::GUI()
 	{
-		if (gpu_driven_renderer.IsSupported()) gpu_driven_renderer.GUI();
-		if (ddgi.IsSupported()) ddgi.GUI();
-		if (renderer_output == RendererOutput::Final)
+		if (gpu_driven_renderer.IsSupported())
 		{
-			if (lighting_path == LightingPathType::TiledDeferred) tiled_deferred_lighting_pass.GUI();
-			shadow_renderer.GUI();
-			switch (volumetric_path)
+			gpu_driven_renderer.GUI();
+		}
+		if (ddgi.IsSupported())
+		{
+			ddgi.GUI();
+		}
+		if (lighting_path == LightingPath::TiledDeferred)
+		{
+			tiled_deferred_lighting_pass.GUI();
+		}
+		else if (lighting_path == LightingPath::PathTracing)
+		{
+			path_tracer.GUI();
+		}
+		shadow_renderer.GUI();
+		ocean_renderer.GUI();
+		sky_pass.GUI();
+		rain_pass.GUI();
+		transparent_pass.GUI();
+		volumetric_fog_manager.GUI();
+		QueueGUI([&]()
 			{
-			case VolumetricPathType::Raymarching:	volumetric_lighting_pass.GUI(); break;
-			case VolumetricPathType::FogVolume:		volumetric_fog_pass.GUI();		break;
-			}
-			ocean_renderer.GUI();
-			sky_pass.GUI();
-			rain_pass.GUI();
-
-			QueueGUI([&]()
+				if (ImGui::TreeNode("Weather Settings"))
 				{
 					if (ImGui::TreeNode("Sun Settings"))
 					{
@@ -618,11 +668,10 @@ namespace adria
 						{
 							static Float sun_elevation = 75.0f;
 							static Float sun_azimuth = 260.0f;
-							static Float sun_temperature = 5900.0f;
 							ConvertDirectionToAzimuthAndElevation(-sun_light->direction, sun_elevation, sun_azimuth);
 
 							Bool changed = false;
-							changed |= ImGui::SliderFloat("Sun Temperature", &sun_temperature, 1000.0f, 15000.0f);
+							changed |= ImGui::ColorEdit3("Sun Color", &sun_light->color.x);
 							changed |= ImGui::SliderFloat("Sun Energy", &sun_light->intensity, 0.0f, 50.0f);
 							changed |= ImGui::SliderFloat("Sun Elevation", &sun_elevation, -90.0f, 90.0f);
 							changed |= ImGui::SliderFloat("Sun Azimuth", &sun_azimuth, 0.0f, 360.0f);
@@ -631,8 +680,6 @@ namespace adria
 							{
 								path_tracer.Reset();
 							}
-
-							sun_light->color = ConvertTemperatureToColor(sun_temperature);
 							sun_light->direction = ConvertElevationAndAzimuthToDirection(sun_elevation, sun_azimuth);
 							sun_light->position = 1e3 * sun_light->direction;
 							sun_light->direction = -sun_light->direction;
@@ -640,27 +687,13 @@ namespace adria
 						}
 						ImGui::TreePop();
 					}
-
-					static Int current_volumetric_path = (Int)volumetric_path;
-					if (ImGui::TreeNode("Misc"))
-					{
-						if (ImGui::Combo("Volumetric Fog", &current_volumetric_path, "None\0 Raymarching\0Fog Volume\0", 3))
-						{
-							VolumetricPath->Set(current_volumetric_path);
-						}
-						volumetric_path = static_cast<VolumetricPathType>(current_volumetric_path);
-
-						if (!ddgi.IsEnabled())
-						{
-							ImGui::ColorEdit3("Ambient Color", ambient_color);
-						}
-						ImGui::SliderFloat3("Wind Direction", wind_dir, -1.0f, 1.0f);
-						ImGui::SliderFloat("Wind Speed", &wind_speed, 0.0f, 32.0f);
-						ImGui::TreePop();
-					}
-				}, GUICommandGroup_Renderer);
-		}
-		renderer_output_pass.GUI();
+					ImGui::ColorEdit3("Ambient Color", ambient_color);
+					ImGui::SliderFloat3("Wind Direction", wind_dir, -1.0f, 1.0f);
+					ImGui::SliderFloat("Wind Speed", &wind_speed, 0.0f, 32.0f);
+					ImGui::TreePop();
+				}
+			}, GUICommandGroup_Renderer);
+		renderer_debug_view_pass.GUI();
 		postprocessor.GUI();
 	}
 

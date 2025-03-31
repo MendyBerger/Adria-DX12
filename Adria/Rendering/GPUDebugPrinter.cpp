@@ -4,7 +4,7 @@
 #include "Graphics/GfxBuffer.h"
 #include "Graphics/GfxDevice.h"
 #include "Graphics/GfxCommandList.h"
-#include "Logging/Logger.h"
+#include "Logging/Log.h"
 #include "RenderGraph/RenderGraph.h"
 #endif
 
@@ -308,7 +308,7 @@ namespace adria
 			}, RGPassType::Copy, RGPassFlags::ForceNoCull);
 	}
 #else
-	GPUDebugPrinter::GPUDebugPrinter(GfxDevice* gfx) : gfx(gfx) {}
+	GPUDebugPrinter::GPUDebugPrinter(GfxDevice* gfx) {}
 	Int32 GPUDebugPrinter::GetPrintfBufferIndex() { return -1; }
 	void GPUDebugPrinter::AddClearPass(RenderGraph& rg) {}
 	void GPUDebugPrinter::AddPrintPass(RenderGraph& rg) {}

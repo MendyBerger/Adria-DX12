@@ -3,6 +3,7 @@
 #include <queue>
 #include "GUICommand.h"
 #include "EditorEvents.h"
+#include "Graphics/GfxProfilerFwd.h"
 #include "Rendering/ViewportData.h"
 #include "Utilities/Singleton.h"
 #include "entt/entity/fwd.hpp"
@@ -48,13 +49,17 @@ namespace adria
 		void Init(EditorInit&& init, MyPluginRuntime* p_runtime, MyPluginRuntimeRender*  pt_render);
 		void Destroy();
 
-		void OnWindowEvent(WindowEventData const& msg_data);
+
 		void Run(MyPluginRuntime* p_runtime, MyWasmModuleId* module_id, MyPluginRuntimeRender*  pr_render);
+		void OnWindowEvent(WindowEventInfo const& msg_data);
+		void EndFrame();
 		Bool IsActive() const;
 
 		void AddCommand(GUICommand&& command);
 		void AddDebugTexture(GUITexture&& debug_texture);
 		void AddRenderPass(RenderGraph& rg);
+
+		Engine*		GetEngine() const { return engine.get(); }
 
 	private:
 		std::unique_ptr<Engine> engine;
@@ -76,6 +81,8 @@ namespace adria
 		EditorEvents editor_events;
 		ViewportData viewport_data;
 		Bool show_basic_console = false;
+
+		GfxProfilerTree const* profiler_tree = nullptr;
 
 	private:
 		Editor();

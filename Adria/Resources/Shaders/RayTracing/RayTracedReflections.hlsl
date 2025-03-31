@@ -1,7 +1,6 @@
 #include "Constants.hlsli"
 #include "Scene.hlsli"
 #include "Lighting.hlsli"
-#include "Reflections.hlsli"
 #include "RayTracingUtil.hlsli"
 
 struct RayTracedReflectionsConstants
@@ -17,7 +16,6 @@ ConstantBuffer<RayTracedReflectionsConstants> RayTracedReflectionsPassCB : regis
 struct [raypayload] RTR_Payload
 {
 	float3 reflectionColor: write(caller, closesthit, miss) : read(caller);
-	uint   randSeed : write(caller) : read(closesthit);
 };
 
 [shader("raygeneration")]
@@ -47,8 +45,8 @@ void RTR_RayGen()
 		float3 V = normalize(worldPosition - FrameCB.cameraPosition.xyz);
 		float3 rayDir = reflect(V, worldNormal);
 
-		uint randSeed = InitRand(launchIndex.x + launchIndex.y * launchDim.x, 0, 16);
-		rayDir = GetConeSample(randSeed, rayDir, RayTracedReflectionsPassCB.roughnessScale);
+		RNG rng = RNG_Initialize(launchIndex.x + launchIndex.y * launchDim.x, 0, 16);
+		rayDir = GetConeSample(rng, rayDir, RayTracedReflectionsPassCB.roughnessScale);
 
 		RayDesc ray;
 		ray.Origin = worldPosition;
@@ -58,7 +56,6 @@ void RTR_RayGen()
 
 		RTR_Payload payloadData;
 		payloadData.reflectionColor = 0.0f;
-		payloadData.randSeed = randSeed;
 		TraceRay(tlas, RAY_FLAG_FORCE_OPAQUE, 0xFF, 0, 0, 0, ray, payloadData);
 		outputTexture[launchIndex.xy] = float4(reflectivity * payloadData.reflectionColor, 1.0f);
 	}
@@ -95,15 +92,13 @@ void RTR_ClosestHitPrimaryRay(inout RTR_Payload payloadData, in HitAttributes at
 	float metallic = materialProperties.metallic;
 
 	float3 radiance = 0.0f;
-	StructuredBuffer<Light> lights = ResourceDescriptorHeap[FrameCB.lightsIdx];
 	for (int i = 0; i < FrameCB.lightCount; ++i)
 	{
-		Light light = lights[i];
-		bool visibility = TraceShadowRay(light, worldPosition.xyz, FrameCB.inverseView);
+		LightInfo lightInfo = LoadLightInfo(i);
+		bool visibility = TraceShadowRay(lightInfo, worldPosition.xyz, FrameCB.inverseView);
 		if(!visibility) continue;
 
-		
-		float3 directLighting = DoLightNoShadows_Default(light, worldPosition.xyz, normalize(worldNormal), V, albedoColor.xyz, metallic, roughness);
+		float3 directLighting = DoLightNoShadows_Default(lightInfo, worldPosition.xyz, normalize(worldNormal), V, albedoColor.xyz, metallic, roughness);
 		radiance += directLighting;
 	}
 	radiance += materialProperties.emissive;
